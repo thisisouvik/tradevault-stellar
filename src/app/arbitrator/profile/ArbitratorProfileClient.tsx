@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { ArrowLeft, User, Mail, Wallet, Copy, CheckCheck, Scale, BarChart3, Bell, Shield } from 'lucide-react'
 
 // Simple toggle component
@@ -25,6 +26,8 @@ function Toggle({ label, description, defaultOn }: { label: string, description:
 
 export default function ArbitratorProfileClient({ profile, resolvedDisputes }: any) {
   const [copied, setCopied] = useState(false)
+  const searchParams = useSearchParams()
+  const walletRequired = searchParams.get('walletRequired') === '1'
 
   const copyWallet = () => {
     navigator.clipboard.writeText(profile?.wallet_address || '')
@@ -67,6 +70,12 @@ export default function ArbitratorProfileClient({ profile, resolvedDisputes }: a
       </header>
 
       <main className="max-w-3xl mx-auto px-6 py-8 space-y-8">
+
+        {walletRequired && !profile?.wallet_address && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-amber-800 text-sm font-semibold">
+            Wallet connection is required to access arbitrator queue and dispute details. Please register your wallet on this page first.
+          </div>
+        )}
         
         <div>
           <h1 className="text-2xl font-black text-slate-900 mb-2">Arbitrator Profile</h1>
