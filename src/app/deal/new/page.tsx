@@ -38,7 +38,7 @@ export default async function NewDealPage() {
         <div className="mb-8 max-w-2xl">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Create new contract</h1>
           <p className="text-gray-500 text-sm">
-            Fill in the trade terms below. Once deployed, all terms are locked securely on the Algorand blockchain and cannot be modified.
+            Fill in the trade terms below. Once deployed, all terms are locked securely on the Stellar blockchain and cannot be modified.
           </p>
         </div>
 

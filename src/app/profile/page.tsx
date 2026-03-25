@@ -155,7 +155,7 @@ export default async function ProfilePage() {
         {/* Wallet section */}
         <div className="bg-white rounded-lg p-6 mb-8 border border-gray-200">
           <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-            Algorand Wallet Connection
+            Stellar Wallet Connection
           </h2>
 
           {profile?.wallet_address ? (

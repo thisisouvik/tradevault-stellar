@@ -207,7 +207,7 @@ export default function ArbitratorReviewClient({
                 target="_blank" rel="noopener noreferrer"
                 className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 flex items-center gap-2 rounded-xl text-xs font-bold transition-colors border border-blue-100 shadow-sm whitespace-nowrap"
               >
-                Verify on Algorand <ExternalLink className="w-3 h-3" />
+                Verify on Stellar <ExternalLink className="w-3 h-3" />
               </a>
             )}
           </div>
@@ -274,11 +274,11 @@ export default function ArbitratorReviewClient({
                   <span className="font-mono text-gray-900 bg-gray-100 px-2 rounded font-bold text-right">{deal.tracking_id}</span>
                 </div>
                 <div className="flex flex-col gap-1 pb-2">
-                  <span className="text-gray-500">SHA256 Hash (on Algorand)</span>
+                  <span className="text-gray-500">SHA256 Hash (on Stellar)</span>
                   <span className="font-mono text-[10px] text-blue-600 bg-blue-50 px-2 py-1 rounded break-all">{deal.tracking_hash || '—'}</span>
                 </div>
                 <div className="mt-4 bg-slate-50 p-4 border border-slate-200 rounded-xl text-xs text-slate-500 font-medium italic">
-                  &ldquo;The tracking hash is permanently stored on Algorand. It cannot be altered retroactively.&rdquo;
+                  &ldquo;The tracking hash is permanently stored on Stellar. It cannot be altered retroactively.&rdquo;
                 </div>
               </div>
             ) : (

@@ -114,7 +114,7 @@ export function ConfirmReceipt({ dealId, appId, amountUSDC, buyerWallet, sellerW
           {txId && (
             <a href={`https://lora.algokit.io/testnet/transaction/${txId}`} target="_blank" rel="noopener noreferrer"
               className="text-xs font-bold text-green-600 hover:text-green-800 flex items-center gap-1 mt-3 bg-white border border-green-200 w-fit px-3 py-1.5 rounded-lg shadow-sm transition-colors cursor-pointer">
-              View on Algorand Explorer <ExternalLink className="w-3.5 h-3.5" />
+              View on Stellar Explorer <ExternalLink className="w-3.5 h-3.5" />
             </a>
           )}
         </div>
@@ -158,7 +158,7 @@ export function ConfirmReceipt({ dealId, appId, amountUSDC, buyerWallet, sellerW
         whileHover={{ scale: loading || !confirmed ? 1 : 1.01 }}
         className="w-full py-4 mt-2 rounded-xl font-bold text-white text-sm transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed bg-green-600 hover:bg-green-700"
       >
-        {loading ? 'Processing via Algorand...' : `✓ Confirm Receipt & Release $${amountUSDC} USDC`}
+        {loading ? 'Processing via Stellar...' : `✓ Confirm Receipt & Release $${amountUSDC} USDC`}
       </motion.button>
     </div>
   )

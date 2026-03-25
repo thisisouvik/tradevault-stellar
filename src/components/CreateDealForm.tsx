@@ -330,10 +330,12 @@ export default function CreateDealForm() {
                     value={form.disputeWindowDays}
                     onChange={e => updateForm('disputeWindowDays', e.target.value)}
                     required
+                    disabled
                     className="w-full px-3 py-2 rounded-md text-sm text-gray-900 border border-gray-300 outline-none focus:ring-1 focus:ring-[#189AB4] focus:border-[#189AB4]"
                   >
-                     {[3, 5, 7, 14].map(d => <option key={d} value={d}>{d} Days post-delivery</option>)}
+                    <option value="7">7 Days post-delivery</option>
                   </select>
+                  <p className="text-xs text-gray-500 mt-1">Fixed at 7 days.</p>
                 </div>
 
               </div>

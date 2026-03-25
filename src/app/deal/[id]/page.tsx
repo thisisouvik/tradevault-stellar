@@ -35,7 +35,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; 
   PROPOSED:  { label: 'Proposed',  color: '#9CA3AF', bg: 'rgba(156,163,175,0.1)', description: 'Waiting for buyer to review, accept and fund.' },
   ACCEPTED:  { label: 'Accepted',  color: '#3B82F6', bg: 'rgba(59,130,246,0.1)',  description: 'Buyer accepted. Waiting for USDC to be locked.' },
   FUNDED:    { label: 'Funded',    color: '#8B5CF6', bg: 'rgba(139,92,246,0.1)',  description: 'USDC locked in contract. Seller should ship now.' },
-  DELIVERED: { label: 'Delivered', color: '#F59E0B', bg: 'rgba(245,158,11,0.1)',  description: 'Tracking submitted. Dispute window is active.' },
+  DELIVERED: { label: 'Delivered', color: '#F59E0B', bg: 'rgba(245,158,11,0.1)',  description: 'Tracking submitted. 7-day dispute window active.' },
   COMPLETED: { label: 'Completed', color: '#10B981', bg: 'rgba(16,185,129,0.1)',  description: 'Payment released to seller. Deal archived on-chain.' },
   DISPUTED:  { label: 'Disputed',  color: '#EF4444', bg: 'rgba(239,68,68,0.1)',   description: 'Dispute in progress. Funds frozen. Arbitrator reviewing.' },
   RESOLVED:  { label: 'Resolved',  color: '#0EA5E9', bg: 'rgba(14,165,233,0.1)',  description: 'Verdict delivered. Funds split and distributed.' },

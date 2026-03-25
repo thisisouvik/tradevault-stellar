@@ -263,7 +263,7 @@ export default function DashboardClient({ user, profile, deals }: DashboardClien
               </div>
               <h2 className="text-2xl font-black text-gray-900 mb-3">Wallet Disconnected</h2>
               <p className="text-gray-500 font-medium mb-8 leading-relaxed">
-                TradeVault ensures your data is cryptographically protected. You must connect your authorized Algorand wallet to decrypt and view your deals, metrics, and contracts.
+                TradeVault ensures your data is cryptographically protected. You must connect your authorized Stellar wallet to decrypt and view your deals, metrics, and contracts.
               </p>
               <div className="scale-110">
                 <WalletConnect />
@@ -311,7 +311,7 @@ export default function DashboardClient({ user, profile, deals }: DashboardClien
                   <p className="text-sm text-gray-500 max-w-xl">
                     {role === 'buyer'
                       ? 'Sellers can view your reputation before accepting your participation in a deal. A clean record makes sellers more willing to offer better terms.'
-                      : 'Your trading history is publicly verified on the Algorand blockchain, establishing immutable trust.'}
+                      : 'Your trading history is publicly verified on the Stellar blockchain, establishing immutable trust.'}
                   </p>
                 </div>
                 <div className="flex gap-8 text-center md:text-left divide-x divide-gray-100">

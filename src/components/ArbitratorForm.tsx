@@ -81,7 +81,7 @@ export function ArbitratorForm({ dealId, amountUSDC, sellerName, buyerName }: Ar
         <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-green-100">
           <CheckCircle2 className="w-8 h-8 text-green-500" />
         </div>
-        <h3 className="text-xl font-bold text-green-900 mb-2">Verdict executed on Algorand.</h3>
+        <h3 className="text-xl font-bold text-green-900 mb-2">Verdict executed on Stellar.</h3>
         <p className="text-sm text-green-700/80 mb-6">The smart contract has distributed the funds according to your verdict.</p>
       </div>
     )
@@ -217,7 +217,7 @@ export function ArbitratorForm({ dealId, amountUSDC, sellerName, buyerName }: Ar
 
           <p className="text-[10px] font-bold text-orange-400 tracking-wide uppercase flex items-center gap-1.5 relative z-10">
             <AlertCircle className="w-3 h-3" />
-            This will execute immediately on Algorand and cannot be undone.
+            This will execute immediately on Stellar and cannot be undone.
           </p>
 
           <motion.button

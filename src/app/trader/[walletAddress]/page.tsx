@@ -74,7 +74,7 @@ export default async function TraderProfilePage({ params }: PageProps) {
           rel="noopener noreferrer"
           className="flex items-center gap-1.5 text-xs font-semibold text-[#2563EB] hover:underline"
         >
-          View on Algorand
+          View on Stellar
           <ExternalLink className="w-3 h-3" />
         </a>
       </header>
@@ -136,7 +136,7 @@ export default async function TraderProfilePage({ params }: PageProps) {
           <h2 className="text-base font-semibold text-[#111827] mb-4 flex items-center gap-2">
             <Shield className="w-4 h-4 text-[#2563EB]" />
             Trade History
-            <span className="text-xs text-[#9CA3AF] font-normal ml-1">— Read from Algorand, publicly verifiable</span>
+            <span className="text-xs text-[#9CA3AF] font-normal ml-1">— Read from Stellar, publicly verifiable</span>
           </h2>
 
           {rep.history.length === 0 ? (
@@ -147,7 +147,7 @@ export default async function TraderProfilePage({ params }: PageProps) {
               <p className="text-[#6B7280] text-sm font-medium mb-1">No trade history on-chain yet.</p>
               <p className="text-xs text-[#9CA3AF]">
                 History will appear here once this wallet completes trades on TradeVault.
-                All records are written to Algorand and cannot be deleted.
+                All records are written to Stellar and cannot be deleted.
               </p>
               <a
                 href={`https://lora.algokit.io/testnet/account/${decodedWallet}`}
@@ -155,7 +155,7 @@ export default async function TraderProfilePage({ params }: PageProps) {
                 rel="noopener noreferrer"
                 className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#2563EB] hover:underline"
               >
-                View raw transactions on AlgoExplorer
+                View raw transactions on Stellar Explorer
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </div>
@@ -180,7 +180,7 @@ export default async function TraderProfilePage({ params }: PageProps) {
         </div>
 
         <p className="text-center text-xs text-[#9CA3AF] mt-6">
-          This reputation data is read directly from Algorand and cannot be modified, deleted, or faked.
+          This reputation data is read directly from Stellar and cannot be modified, deleted, or faked.
         </p>
       </main>
     </div>
