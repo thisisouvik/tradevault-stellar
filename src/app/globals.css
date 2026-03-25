@@ -1,0 +1,140 @@
+@import "tailwindcss";
+@source "../components";
+@source "./";
+
+:root {
+  /* New UI Design System Colors */
+  --bg-sidebar: #1A1D23;
+  --bg-sidebar-active: #2C2F36;
+  --bg-content: #F0F2F5;
+  --bg-card: #FFFFFF;
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+  
+  --primary: #2563EB;
+  --success: #0EA5E9;
+  --danger: #EF4444;
+  --border-light: rgba(0, 0, 0, 0.06);
+  --border-sidebar: rgba(255, 255, 255, 0.08);
+
+  /* Status Colors */
+  --status-proposed: #9CA3AF;
+  --status-accepted: #3B82F6;
+  --status-funded: #8B5CF6;
+  --status-delivered: #F59E0B;
+  --status-completed: #10B981;
+  --status-disputed: #EF4444;
+  --status-resolved: #0EA5E9;
+  --status-cancelled: #6B7280;
+}
+
+@theme inline {
+  --font-sans: var(--font-dm-sans);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg-content);
+  color: var(--text-secondary);
+  font-family: var(--font-dm-sans, 'DM Sans', system-ui, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-content);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+
+/* Selection */
+::selection {
+  background: rgba(37, 99, 235, 0.2);
+  color: var(--primary);
+}
+
+/* Cards */
+.saas-card {
+  background: var(--bg-card);
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  padding: 24px;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Status badge */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Primary Button */
+.btn-primary {
+  background: var(--primary);
+  color: #FFFFFF;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.section-fade-in,
+.section-fade-in-left,
+.section-fade-in-right {
+  opacity: 0;
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.section-fade-in {
+  transform: translateY(32px);
+}
+
+.section-fade-in-left {
+  transform: translateX(-40px);
+}
+
+.section-fade-in-right {
+  transform: translateX(40px);
+}
+
+.section-fade-in.animate-in-view,
+.section-fade-in-left.animate-in-view,
+.section-fade-in-right.animate-in-view {
+  opacity: 1;
+  transform: translate(0, 0);
+}

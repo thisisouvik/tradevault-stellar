@@ -1,0 +1,25 @@
+#pragma version 8
+txn NumAppArgs
+int 0
+==
+bnz approve
+txna ApplicationArgs 0
+byte "optin"
+==
+bnz do_optin
+approve:
+int 1
+return
+do_optin:
+itxn_begin
+int axfer
+itxn_field TypeEnum
+int 10458941
+itxn_field XferAsset
+global CurrentApplicationAddress
+itxn_field AssetReceiver
+int 0
+itxn_field AssetAmount
+itxn_submit
+int 1
+return

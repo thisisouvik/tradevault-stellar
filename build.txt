@@ -1,0 +1,51 @@
+info: using puyapy version 5.7.1
+warning: cannot determine package root for contract/smart_contracts/escrow/contract.py
+info: using python search path: ['C:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.13_3.13.3312.0_x64__qbz5n2kfra8p0\\python313.zip', 'C:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.13_3.13.3312.0_x64__qbz5n2kfra8p0\\DLLs', 'C:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.13_3.13.3312.0_x64__qbz5n2kfra8p0', 'C:\\Users\\dasso\\OneDrive\\Desktop\\Projects\\tradevault\\contract\\.venv', 'C:\\Users\\dasso\\OneDrive\\Desktop\\Projects\\tradevault\\contract\\.venv\\Lib\\site-packages']
+contract\smart_contracts\escrow\contract.py:6:17 error: unsupported statement type at module level
+                                                       USDC_ASSET_ID = UInt64(10458941)  # TestNet USDC
+                                                                       ^~~~~~~~~~~~~~~~
+contract\smart_contracts\escrow\contract.py:9:13 error: unsupported statement type at module level
+                                                       PROPOSED  = UInt64(0)
+                                                                   ^~~~~~~~~
+contract\smart_contracts\escrow\contract.py:10:13 error: unsupported statement type at module level
+                                                        ACCEPTED  = UInt64(1)
+                                                                    ^~~~~~~~~
+contract\smart_contracts\escrow\contract.py:11:13 error: unsupported statement type at module level
+                                                        FUNDED    = UInt64(2)
+                                                                    ^~~~~~~~~
+contract\smart_contracts\escrow\contract.py:12:13 error: unsupported statement type at module level
+                                                        DELIVERED = UInt64(3)
+                                                                    ^~~~~~~~~
+contract\smart_contracts\escrow\contract.py:13:13 error: unsupported statement type at module level
+                                                        COMPLETED = UInt64(4)
+                                                                    ^~~~~~~~~
+contract\smart_contracts\escrow\contract.py:14:13 error: unsupported statement type at module level
+                                                        DISPUTED  = UInt64(5)
+                                                                    ^~~~~~~~~
+contract\smart_contracts\escrow\contract.py:15:13 error: unsupported statement type at module level
+                                                        RESOLVED  = UInt64(6)
+                                                                    ^~~~~~~~~
+contract\smart_contracts\escrow\contract.py:59:28 error: Unable to resolve global constant reference
+                                                                self.state.value = PROPOSED
+                                                                                   ^~~~~~~~
+contract\smart_contracts\escrow\contract.py:69:36 error: Unable to resolve global constant reference
+                                                                assert self.state.value == PROPOSED, "Contract not in PROPOSED state"
+                                                                                           ^~~~~~~~
+contract\smart_contracts\escrow\contract.py:80:36 error: Unable to resolve global constant reference
+                                                                assert self.state.value == ACCEPTED, "Must accept before funding"
+                                                                                           ^~~~~~~~
+contract\smart_contracts\escrow\contract.py:92:36 error: Unable to resolve global constant reference
+                                                                assert self.state.value == FUNDED, "Contract not in FUNDED state"
+                                                                                           ^~~~~~
+contract\smart_contracts\escrow\contract.py:106:36 error: Unable to resolve global constant reference
+                                                                 assert self.state.value == DELIVERED, "Contract not in DELIVERED state"
+                                                                                            ^~~~~~~~~
+contract\smart_contracts\escrow\contract.py:122:36 error: Unable to resolve global constant reference
+                                                                 assert self.state.value == DELIVERED, "Contract not in DELIVERED state"
+                                                                                            ^~~~~~~~~
+contract\smart_contracts\escrow\contract.py:139:36 error: Unable to resolve global constant reference
+                                                                 assert self.state.value == DELIVERED, "Contract not in DELIVERED state"
+                                                                                            ^~~~~~~~~
+contract\smart_contracts\escrow\contract.py:154:36 error: Unable to resolve global constant reference
+                                                                 assert self.state.value == DISPUTED, "Contract not in DISPUTED state"
+                                                                                            ^~~~~~~~
