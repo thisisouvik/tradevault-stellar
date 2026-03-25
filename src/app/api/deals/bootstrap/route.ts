@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server'
  * POST /api/deals/bootstrap
  *
  * Legacy endpoint kept for API compatibility.
- * In Stellar Soroban, there is no Algorand-style bootstrap/MBR funding step,
+ * In Soroban, there is no manual bootstrap funding step,
  * so this route now validates server-side Stellar runtime configuration.
  */
 export async function POST(request: NextRequest) {

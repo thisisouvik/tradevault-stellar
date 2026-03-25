@@ -115,7 +115,7 @@ export default async function DealPage({ params }: PageProps) {
           )}
           {deal.contract_app_id && (
             <a
-              href={`https://lora.algokit.io/testnet/application/${deal.contract_app_id}`}
+              href={`https://stellar.expert/explorer/testnet/contract/${deal.contract_app_id}`}
               target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors border border-blue-100 shadow-sm"
             >
@@ -226,7 +226,7 @@ export default async function DealPage({ params }: PageProps) {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-mono font-bold text-[#05445E]">{deal.contract_app_id}</span>
-                    <a href={`https://lora.algokit.io/testnet/application/${deal.contract_app_id}`} target="_blank" rel="noopener noreferrer" className="text-[#189AB4] hover:bg-[#189AB4]/10 p-2 rounded-lg transition-colors bg-white border border-slate-200">
+                    <a href={`https://stellar.expert/explorer/testnet/contract/${deal.contract_app_id}`} target="_blank" rel="noopener noreferrer" className="text-[#189AB4] hover:bg-[#189AB4]/10 p-2 rounded-lg transition-colors bg-white border border-slate-200">
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>

@@ -3,6 +3,34 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail, emailTemplates } from '@/lib/email'
 
+const STELLAR_TXHASH_REGEX = /^[a-fA-F0-9]{64}$/
+
+type ChainNetwork = 'stellar'
+
+function resolveDealChain(deal: { contract_address?: string | null; contract_app_id?: string | null }): ChainNetwork {
+  if (!deal.contract_address) {
+    throw new Error('Deal is not configured for Stellar contract execution')
+  }
+  return 'stellar'
+}
+
+function isValidTxHash(network: ChainNetwork, txHash: string): boolean {
+  return STELLAR_TXHASH_REGEX.test(txHash)
+}
+
+async function txExistsOnChain(_network: ChainNetwork, txHash: string): Promise<boolean> {
+  try {
+    const horizon = process.env.STELLAR_HORIZON_URL || 'https://horizon-testnet.stellar.org'
+    const res = await fetch(`${horizon}/transactions/${txHash}`, {
+      method: 'GET',
+      cache: 'no-store',
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
 interface RouteParams {
   params: Promise<{ id: string }>
 }
@@ -57,7 +85,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     .single()
 
   const body = await request.json()
-  const { status } = body
+  const { status, txHash, chainNetwork } = body
 
   const allowedStatuses = new Set(['FUNDED', 'COMPLETED', 'DISPUTED'])
   if (!status || !allowedStatuses.has(status)) {
@@ -67,7 +95,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   const admin = createAdminClient()
   const { data: existingDeal } = await admin
     .from('deals')
-    .select('id, seller_id, buyer_email, status')
+    .select('id, seller_id, buyer_email, status, contract_address, contract_app_id')
     .eq('id', id)
     .single()
 
@@ -91,6 +119,49 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   }
 
   const updateData: Record<string, unknown> = { status }
+
+  let expectedNetwork: ChainNetwork
+  try {
+    expectedNetwork = resolveDealChain(existingDeal)
+  } catch (err: any) {
+    return NextResponse.json({ error: err?.message || 'Unsupported chain configuration' }, { status: 400 })
+  }
+  if (chainNetwork && chainNetwork !== expectedNetwork) {
+    return NextResponse.json(
+      { error: `Invalid chain network for this deal. Expected ${expectedNetwork}.` },
+      { status: 400 }
+    )
+  }
+
+  if (!txHash || typeof txHash !== 'string') {
+    return NextResponse.json({ error: 'Missing transaction proof (txHash)' }, { status: 400 })
+  }
+
+  const normalizedTxHash = txHash.trim()
+  if (!isValidTxHash(expectedNetwork, normalizedTxHash)) {
+    return NextResponse.json({ error: `Invalid ${expectedNetwork} tx hash format` }, { status: 400 })
+  }
+
+  const exists = await txExistsOnChain(expectedNetwork, normalizedTxHash)
+  if (!exists) {
+    return NextResponse.json(
+      { error: `Transaction proof was not found on ${expectedNetwork} network` },
+      { status: 400 }
+    )
+  }
+
+  console.info(
+    '[security] verified state transition proof',
+    JSON.stringify({
+      dealId: id,
+      userId: user.id,
+      fromStatus: existingDeal.status,
+      toStatus: status,
+      chain: expectedNetwork,
+      txHash: normalizedTxHash,
+      at: new Date().toISOString(),
+    })
+  )
 
   if (status === 'FUNDED' && existingDeal.status !== 'PROPOSED' && existingDeal.status !== 'ACCEPTED') {
     return NextResponse.json({ error: 'Invalid state transition to FUNDED' }, { status: 400 })
