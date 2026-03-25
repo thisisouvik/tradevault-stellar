@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Wallet, LogOut, Copy, CheckCheck, ExternalLink } from 'lucide-react'
-import { useWallet } from '@txnlab/use-wallet-react'
+import { Wallet, LogOut, Copy, CheckCheck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 interface WalletConnectProps {
@@ -11,11 +10,11 @@ interface WalletConnectProps {
 }
 
 export function WalletConnect({ onConnect }: WalletConnectProps) {
-  const { wallets, activeWallet, activeAddress } = useWallet()
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState('')
-  const [showPicker, setShowPicker] = useState(false)
-  const [balance, setBalance] = useState<{ algo: string; usdc: string } | null>(null)
+  const [walletAddress, setWalletAddress] = useState('')
+  const [showInput, setShowInput] = useState(false)
+  const [inputValue, setInputValue] = useState('')
   const [mounted, setMounted] = useState(false)
   const supabase = createClient()
 
@@ -30,66 +29,66 @@ export function WalletConnect({ onConnect }: WalletConnectProps) {
     await supabase.from('profiles').update({ wallet_address: addr }).eq('id', user.id)
   }, [supabase])
 
-  // Call onConnect and save to DB when a wallet connects
+  // Load existing wallet from profile
   useEffect(() => {
-    if (activeAddress) {
-      saveWalletToProfile(activeAddress)
-      onConnect?.(activeAddress)
-      setShowPicker(false)
+    let ignore = false
+    ;(async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user || ignore) return
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('wallet_address')
+        .eq('id', user.id)
+        .single()
+      if (profile?.wallet_address && !ignore) {
+        setWalletAddress(profile.wallet_address)
+        onConnect?.(profile.wallet_address)
+      }
+    })()
 
-      // Fetch balances
-      fetch(`https://testnet-api.algonode.cloud/v2/accounts/${activeAddress}`)
-        .then(res => res.json())
-        .then(data => {
-          let algo = '0.00'
-          let usdc = '0.00'
-          if (data.amount !== undefined) {
-            algo = (data.amount / 1_000_000).toFixed(2)
-          }
-          if (data.assets) {
-            const usdcAsset = data.assets.find((a: any) => a['asset-id'] === 10458941)
-            if (usdcAsset) {
-              usdc = (usdcAsset.amount / 1_000_000).toFixed(2)
-            }
-          }
-          setBalance({ algo, usdc })
-        })
-        .catch(console.error)
-    } else {
-      setBalance(null)
+    return () => { ignore = true }
+  }, [supabase, onConnect])
+
+  async function handleConnect() {
+    setError('')
+    const addr = inputValue.trim()
+    if (!/^G[A-Z2-7]{20,}$/.test(addr)) {
+      setError('Enter a valid Stellar wallet address.')
+      return
     }
-  }, [activeAddress, saveWalletToProfile, onConnect])
+
+    await saveWalletToProfile(addr)
+    setWalletAddress(addr)
+    onConnect?.(addr)
+    setInputValue('')
+    setShowInput(false)
+  }
+
+  async function handleDisconnect() {
+    setError('')
+    await saveWalletToProfile('')
+    setWalletAddress('')
+  }
 
   function copyAddress() {
-    if (!activeAddress) return
-    navigator.clipboard.writeText(activeAddress)
+    if (!walletAddress) return
+    navigator.clipboard.writeText(walletAddress)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
   // Already connected view (only render after client mount to avoid hydration mismatch)
-  if (mounted && activeAddress) {
+  if (mounted && walletAddress) {
     return (
       <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)' }}>
         <div className="w-2 h-2 rounded-full bg-[#4ade80] animate-pulse" />
-        <span className="text-sm font-mono text-[#4ade80] font-medium">{shortAddr(activeAddress)}</span>
-
-        {balance && (
-          <div className="flex items-center gap-2 ml-2 pl-3 border-l border-[#4ade80]/30 text-xs font-bold text-[#4ade80]">
-            <span>{balance.usdc} USDC</span>
-            <span className="opacity-60">|</span>
-            <span className="opacity-80">{balance.algo} ALGO</span>
-          </div>
-        )}
+        <span className="text-sm font-mono text-[#4ade80] font-medium">{shortAddr(walletAddress)}</span>
 
         <div className="flex items-center gap-1 ml-2">
           <button onClick={copyAddress} className="p-1 rounded-lg text-[#8ca0b3] hover:text-[#4ade80] transition-colors" title="Copy address">
             {copied ? <CheckCheck className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
-          <a href={`https://lora.algokit.io/testnet/account/${activeAddress}`} target="_blank" rel="noopener noreferrer" className="p-1 rounded-lg text-[#8ca0b3] hover:text-[#4ade80] transition-colors" title="View on explorer">
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
-          <button onClick={() => activeWallet?.disconnect()} className="p-1 rounded-lg text-[#8ca0b3] hover:text-red-400 transition-colors" title="Disconnect">
+          <button onClick={handleDisconnect} className="p-1 rounded-lg text-[#8ca0b3] hover:text-red-400 transition-colors" title="Disconnect">
             <LogOut className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -97,11 +96,11 @@ export function WalletConnect({ onConnect }: WalletConnectProps) {
     )
   }
 
-  // Picker Modal
+  // Manual wallet connect
   return (
     <div className="relative">
       <motion.button
-        onClick={() => setShowPicker(!showPicker)}
+        onClick={() => setShowInput(!showInput)}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-[#04101f] transition-all"
@@ -114,28 +113,23 @@ export function WalletConnect({ onConnect }: WalletConnectProps) {
         Connect Wallet
       </motion.button>
 
-      {showPicker && (
+      {showInput && (
         <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-xl shadow-gray-200/50 border border-gray-100 p-2 z-50">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2 mt-2">Select a Wallet</p>
-          <div className="space-y-1">
-            {wallets.map(wallet => (
-              <button
-                key={wallet.id}
-                onClick={() => {
-                  wallet.connect()
-                  setShowPicker(false)
-                }}
-                className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-white border border-gray-100 flex items-center justify-center shadow-sm p-1">
-                    <img src={wallet.metadata.icon} alt={wallet.metadata.name} className="w-full h-full object-contain" />
-                  </div>
-                  <span className="text-sm font-semibold text-gray-900">{wallet.metadata.name}</span>
-                </div>
-                {wallet.isActive && <div className="w-2 h-2 rounded-full bg-green-500" />}
-              </button>
-            ))}
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2 mt-2">Enter Stellar Wallet</p>
+          <div className="space-y-2 px-2 pb-2">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="G..."
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-mono"
+            />
+            <button
+              onClick={handleConnect}
+              className="w-full px-3 py-2 rounded-lg bg-[#05445E] text-white text-sm font-semibold hover:bg-[#189AB4]"
+            >
+              Save Wallet
+            </button>
           </div>
         </div>
       )}

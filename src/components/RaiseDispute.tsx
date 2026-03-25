@@ -3,9 +3,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { AlertTriangle, AlertCircle } from 'lucide-react'
-import { useWallet } from '@txnlab/use-wallet-react'
-import { algodClient } from '@/lib/algorand'
-import algosdk from 'algosdk'
 
 interface RaiseDisputeProps {
   dealId: string
@@ -19,46 +16,42 @@ export function RaiseDispute({ dealId, appId, buyerWallet, onSuccess }: RaiseDis
   const [error, setError] = useState('')
   const [confirmed, setConfirmed] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
-  const { activeAddress, signTransactions } = useWallet()
+  void appId
+  void buyerWallet
 
   async function handleDispute() {
     setError('')
     setLoading(true)
     try {
-      if (!activeAddress) {
-        throw new Error('Please connect your Wallet first.')
-      }
-
-      const buyerAddr = activeAddress
-
-      if (buyerAddr !== buyerWallet) {
-        throw new Error('Connected wallet does not match buyer wallet for this deal.')
-      }
-
-      const params = await algodClient.getTransactionParams().do()
-      const disputeTxn = algosdk.makeApplicationCallTxnFromObject({
-        sender: buyerAddr,
-        appIndex: appId,
-        onComplete: algosdk.OnApplicationComplete.NoOpOC,
-        appArgs: [new TextEncoder().encode('dispute')],
-        suggestedParams: params,
+      const onchainRes = await fetch(`/api/deals/${dealId}/onchain`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'dispute' }),
       })
 
-      const signedTxns = await signTransactions([disputeTxn])
-      const validTxns = signedTxns.filter((tx): tx is Uint8Array => tx !== null)
-
-      if (validTxns.length === 0) {
-        throw new Error('Transaction signing was cancelled or returned empty.');
+      const onchainData = await onchainRes.json().catch(() => ({}))
+      if (!onchainRes.ok) {
+        throw new Error(onchainData?.error || 'Failed to execute dispute action on Stellar')
       }
 
-      const { txid } = await algodClient.sendRawTransaction(validTxns).do()
-      await algosdk.waitForConfirmation(algodClient, txid, 4)
+      const txHash = String(onchainData.txHash || '')
+      const status = String(onchainData.status || 'DISPUTED')
+      const chainNetwork = String(onchainData.chainNetwork || 'stellar')
 
-      await fetch(`/api/deals/${dealId}`, {
+      const updateRes = await fetch(`/api/deals/${dealId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'DISPUTED' }),
+        body: JSON.stringify({
+          status,
+          txHash,
+          chainNetwork,
+        }),
       })
+
+      if (!updateRes.ok) {
+        const updateData = await updateRes.json().catch(() => ({}))
+        throw new Error(updateData?.error || 'Failed to persist disputed status after chain confirmation.')
+      }
 
       onSuccess()
     } catch (err) {

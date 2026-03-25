@@ -3,9 +3,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react'
-import { useWallet } from '@txnlab/use-wallet-react'
-import { algodClient, USDC_ASSET_ID } from '@/lib/algorand'
-import algosdk from 'algosdk'
 
 interface ConfirmReceiptProps {
   dealId: string
@@ -22,7 +19,9 @@ export function ConfirmReceipt({ dealId, appId, amountUSDC, buyerWallet, sellerW
   const [done, setDone] = useState(false)
   const [txId, setTxId] = useState('')
   const [confirmed, setConfirmed] = useState(false)
-  const { activeAddress, signTransactions } = useWallet()
+  void appId
+  void buyerWallet
+  void sellerWallet
 
   async function handleConfirm() {
     if (!confirmed) return
@@ -30,70 +29,37 @@ export function ConfirmReceipt({ dealId, appId, amountUSDC, buyerWallet, sellerW
     setLoading(true)
 
     try {
-      if (!activeAddress) {
-        throw new Error('Please connect your Wallet first.')
-      }
-
-      const buyerAddr = activeAddress
-
-      if (buyerAddr !== buyerWallet) {
-        throw new Error('Connected wallet does not match buyer wallet for this deal.')
-      }
-
-      // --- Read the seller address directly from the Algorand contract global state ---
-      // This bypasses any database/RLS issues. The contract always has the seller stored.
-      let resolvedSellerWallet = sellerWallet
-      if (!resolvedSellerWallet) {
-        const appInfo = await algodClient.getApplicationByID(appId).do()
-        const globalState = appInfo.params.globalState as unknown as Array<{
-          key: Uint8Array
-          value: { type: number; uint: number | bigint; bytes: Uint8Array }
-        }>
-        for (const item of globalState) {
-          const key = new TextDecoder().decode(item.key)
-          if (key === 'seller') {
-            resolvedSellerWallet = algosdk.encodeAddress(item.value.bytes)
-            break
-          }
-        }
-      }
-
-      if (!resolvedSellerWallet) {
-        throw new Error('Could not resolve seller address from contract. Please refresh and try again.')
-      }
-
-      const params = await algodClient.getTransactionParams().do()
-      const confirmTxn = algosdk.makeApplicationCallTxnFromObject({
-        sender: buyerAddr,
-        appIndex: appId,
-        onComplete: algosdk.OnApplicationComplete.NoOpOC,
-        appArgs: [new TextEncoder().encode('confirm')],
-        foreignAssets: [USDC_ASSET_ID],
-        accounts: [resolvedSellerWallet],
-        suggestedParams: {
-          ...params,
-          fee: 2000,
-          flatFee: true,
-        },
+      const onchainRes = await fetch(`/api/deals/${dealId}/onchain`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'confirm' }),
       })
 
-      const signedTxns = await signTransactions([confirmTxn])
-      const validTxns = signedTxns.filter((tx): tx is Uint8Array => tx !== null)
-      
-      if (validTxns.length === 0) {
-        throw new Error('Transaction signing was cancelled or returned empty.');
+      const onchainData = await onchainRes.json().catch(() => ({}))
+      if (!onchainRes.ok) {
+        throw new Error(onchainData?.error || 'Failed to execute confirm action on Stellar')
       }
-      
-      const { txid } = await algodClient.sendRawTransaction(validTxns).do()
-      setTxId(txid)
-      await algosdk.waitForConfirmation(algodClient, txid, 4)
+
+      const txHash = String(onchainData.txHash || '')
+      const status = String(onchainData.status || 'COMPLETED')
+      const chainNetwork = String(onchainData.chainNetwork || 'stellar')
+      setTxId(txHash)
 
       // Update DB
-      await fetch(`/api/deals/${dealId}`, {
+      const updateRes = await fetch(`/api/deals/${dealId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'COMPLETED' }),
+        body: JSON.stringify({
+          status,
+          txHash,
+          chainNetwork,
+        }),
       })
+
+      if (!updateRes.ok) {
+        const updateData = await updateRes.json().catch(() => ({}))
+        throw new Error(updateData?.error || 'Failed to persist completed status after chain confirmation.')
+      }
 
       setDone(true)
       setTimeout(() => onSuccess(), 2000)
