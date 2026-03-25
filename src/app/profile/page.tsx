@@ -49,14 +49,16 @@ export default async function ProfilePage() {
     .filter(d => activeStatuses.includes(d.status))
     .reduce((acc, d) => acc + d.amount_usdc, 0)
 
-  // Fetch live wallet balance from Algorand Testnet
+  // Fetch live wallet balance from Stellar Horizon testnet
   let walletUsdc = 0
   if (profile?.wallet_address) {
     try {
-      const res = await fetch(`https://testnet-api.algonode.cloud/v2/accounts/${profile.wallet_address}`, { cache: 'no-store' })
+      const res = await fetch(`https://horizon-testnet.stellar.org/accounts/${profile.wallet_address}`, { cache: 'no-store' })
       const data = await res.json()
-      const usdcAsset = data.assets?.find((a: any) => a['asset-id'] === 10458941)
-      if (usdcAsset) walletUsdc = usdcAsset.amount / 1_000_000
+      const usdcAsset = Array.isArray(data?.balances)
+        ? data.balances.find((b: any) => b.asset_type !== 'native' && String(b.asset_code || '').toUpperCase() === 'USDC')
+        : null
+      if (usdcAsset?.balance) walletUsdc = Number(usdcAsset.balance)
     } catch (e) {
       console.error('Failed to fetch wallet balance', e)
     }
@@ -166,7 +168,7 @@ export default async function ProfilePage() {
                     <span className="w-2 h-2 rounded-full bg-green-500" /> Connected Address
                   </span>
                   <a
-                    href={`https://lora.algokit.io/testnet/account/${profile.wallet_address}`}
+                    href={`https://stellar.expert/explorer/testnet/account/${profile.wallet_address}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-[#189AB4] hover:underline flex items-center gap-1 text-sm"
@@ -186,7 +188,7 @@ export default async function ProfilePage() {
               <Shield className="w-10 h-10 text-gray-400 mb-3" />
               <p className="text-md font-semibold text-gray-900 mb-1">No wallet connected</p>
               <p className="text-sm text-gray-500 mb-6 max-w-sm">
-                Connect your Pera or Defly wallet to sign contracts and track your immutable on-chain reputation.
+                Add your Stellar wallet address to sign contracts and track immutable on-chain reputation.
               </p>
               <WalletConnect />
             </div>

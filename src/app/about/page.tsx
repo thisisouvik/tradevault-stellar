@@ -141,7 +141,7 @@ export default function AboutPage() {
             <Link href="/auth/signup" className="flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#05445E] text-white font-bold text-sm hover:bg-[#189AB4] transition-all shadow-lg">
               Start Trading Free <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link href="/why-algorand" className="flex items-center gap-2 px-7 py-3.5 rounded-full bg-white border border-[#189AB4]/30 text-[#05445E] font-bold text-sm hover:border-[#189AB4] transition-all">
+            <Link href="/why-stellar" className="flex items-center gap-2 px-7 py-3.5 rounded-full bg-white border border-[#189AB4]/30 text-[#05445E] font-bold text-sm hover:border-[#189AB4] transition-all">
               Why Stellar?
             </Link>
           </motion.div>
@@ -196,7 +196,7 @@ export default function AboutPage() {
               We built TradeVault to invert this completely. Instead of trusting a company, you trust code — open, verifiable, and immutable code running on the Stellar blockchain. The rules of the trade are locked in at creation and cannot be changed by anyone, including us.
             </p>
             <a
-              href="https://lora.algokit.io/testnet"
+              href="https://stellar.expert/explorer/testnet"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-sm font-bold text-[#189AB4] hover:text-[#05445E] transition-colors"
