@@ -203,7 +203,7 @@ export default function ArbitratorReviewClient({
             </div>
             {appId > 0 && (
               <a
-                href={`https://lora.algokit.io/testnet/application/${appId}`}
+                href={`https://stellar.expert/explorer/testnet/contract/${appId}`}
                 target="_blank" rel="noopener noreferrer"
                 className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 flex items-center gap-2 rounded-xl text-xs font-bold transition-colors border border-blue-100 shadow-sm whitespace-nowrap"
               >
