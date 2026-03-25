@@ -84,8 +84,3 @@ Open http://localhost:3000.
 
 - SQL schema and migrations are under `supabase/`
 - Ensure the required tables exist (`profiles`, `deals`, `evidence`, `arbitration`, etc.)
-
-## Notes
-
-- Legacy Algorand runtime paths have been removed in favor of Stellar/Soroban flows.
-- If you use a custom relayer, keep relayer credentials server-side only.
