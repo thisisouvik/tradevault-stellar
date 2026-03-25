@@ -9,12 +9,35 @@ export async function GET(request: NextRequest) {
   if (!dealId) return NextResponse.json({ error: 'dealId required' }, { status: 400 })
 
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const { data: actorProfile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
 
   const { data: deal } = await supabase
     .from('deals')
-    .select('tracking_id, courier, tracking_hash')
+    .select('tracking_id, courier, tracking_hash, seller_id, buyer_email')
     .eq('id', dealId)
     .single()
+
+  if (!deal) {
+    return NextResponse.json({ error: 'Deal not found' }, { status: 404 })
+  }
+
+  const isSeller = deal.seller_id === user.id
+  const isBuyer = Boolean(user.email && deal.buyer_email && user.email === deal.buyer_email)
+  const isArbitrator = actorProfile?.role === 'arbitrator'
+
+  if (!isSeller && !isBuyer && !isArbitrator) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
   if (!deal?.tracking_id || !deal?.courier) {
     return NextResponse.json({ checkpoints: [], status: 'Unknown' })

@@ -13,9 +13,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Wallet address required' }, { status: 400 })
     }
 
+    const normalizedWallet = String(walletAddress).trim()
+    if (normalizedWallet.length < 16 || normalizedWallet.length > 128) {
+      return NextResponse.json({ error: 'Invalid wallet address format' }, { status: 400 })
+    }
+
     const { error } = await supabase
       .from('profiles')
-      .update({ wallet_address: walletAddress })
+      .update({ wallet_address: normalizedWallet })
       .eq('id', user.id)
 
     if (error) {

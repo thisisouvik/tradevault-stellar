@@ -25,9 +25,28 @@ export async function POST(request: NextRequest) {
     // Get seller profile
     const { data: seller } = await supabase
       .from('profiles')
-      .select('name, email')
+      .select('name, email, role, wallet_address')
       .eq('id', user.id)
       .single()
+
+    if (seller?.role !== 'seller') {
+      return NextResponse.json({ error: 'Only sellers can create deals' }, { status: 403 })
+    }
+
+    if (!seller?.wallet_address) {
+      return NextResponse.json({ error: 'Please connect a wallet before creating a deal' }, { status: 400 })
+    }
+
+    const parsedAmount = Number.parseInt(amountUSDC, 10)
+    const parsedDeliveryDays = Number.parseInt(deliveryDays, 10)
+
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      return NextResponse.json({ error: 'Invalid amountUSDC' }, { status: 400 })
+    }
+
+    if (!Number.isFinite(parsedDeliveryDays) || parsedDeliveryDays <= 0) {
+      return NextResponse.json({ error: 'Invalid deliveryDays' }, { status: 400 })
+    }
 
     // Insert deal
     const { data: deal, error } = await supabase
@@ -38,8 +57,8 @@ export async function POST(request: NextRequest) {
         buyer_wallet: buyerWallet,
         item_name: itemName,
         item_description: itemDescription || null,
-        amount_usdc: parseInt(amountUSDC),
-        delivery_days: parseInt(deliveryDays),
+        amount_usdc: parsedAmount,
+        delivery_days: parsedDeliveryDays,
         dispute_window_days: 7,
         status: 'PROPOSED',
         contract_app_id: contractAppId || null,

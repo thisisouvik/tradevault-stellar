@@ -10,6 +10,17 @@ interface RouteParams {
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   const { id } = await params
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const { data: actorProfile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
 
   const { data, error } = await supabase
     .from('deals')
@@ -19,6 +30,14 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 
   if (error || !data) {
     return NextResponse.json({ error: 'Deal not found' }, { status: 404 })
+  }
+
+  const isSeller = data.seller_id === user.id
+  const isBuyer = Boolean(user.email && data.buyer_email && user.email === data.buyer_email)
+  const isArbitrator = actorProfile?.role === 'arbitrator'
+
+  if (!isSeller && !isBuyer && !isArbitrator) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   return NextResponse.json(data)
@@ -31,17 +50,58 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const body = await request.json()
-  const { status, trackingId, courier, trackingHash, deliveredAt } = body
+  const { data: actorProfile } = await supabase
+    .from('profiles')
+    .select('role, wallet_address')
+    .eq('id', user.id)
+    .single()
 
-  const updateData: Record<string, unknown> = {}
-  if (status) updateData.status = status
-  if (trackingId) updateData.tracking_id = trackingId
-  if (courier) updateData.courier = courier
-  if (trackingHash) updateData.tracking_hash = trackingHash
-  if (deliveredAt) updateData.delivered_at = deliveredAt
+  const body = await request.json()
+  const { status } = body
+
+  const allowedStatuses = new Set(['FUNDED', 'COMPLETED', 'DISPUTED'])
+  if (!status || !allowedStatuses.has(status)) {
+    return NextResponse.json({ error: 'Invalid or unsupported status update' }, { status: 400 })
+  }
 
   const admin = createAdminClient()
+  const { data: existingDeal } = await admin
+    .from('deals')
+    .select('id, seller_id, buyer_email, status')
+    .eq('id', id)
+    .single()
+
+  if (!existingDeal) {
+    return NextResponse.json({ error: 'Deal not found' }, { status: 404 })
+  }
+
+  const isSeller = existingDeal.seller_id === user.id
+  const isBuyer = Boolean(user.email && existingDeal.buyer_email && user.email === existingDeal.buyer_email)
+  const isArbitrator = actorProfile?.role === 'arbitrator'
+
+  // Only buyer may move FUNDED/COMPLETED/DISPUTED transitions from client-triggered actions.
+  if ((status === 'FUNDED' || status === 'COMPLETED' || status === 'DISPUTED') && !isBuyer) {
+    return NextResponse.json({ error: 'Only buyer can update this status' }, { status: 403 })
+  }
+
+  // Arbitrator and seller are intentionally blocked from this generic status route
+  // to keep state transitions explicit through dedicated APIs.
+  if (isArbitrator || isSeller) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  const updateData: Record<string, unknown> = { status }
+
+  if (status === 'FUNDED' && existingDeal.status !== 'PROPOSED' && existingDeal.status !== 'ACCEPTED') {
+    return NextResponse.json({ error: 'Invalid state transition to FUNDED' }, { status: 400 })
+  }
+  if (status === 'COMPLETED' && existingDeal.status !== 'DELIVERED') {
+    return NextResponse.json({ error: 'Deal must be DELIVERED before completion' }, { status: 400 })
+  }
+  if (status === 'DISPUTED' && existingDeal.status !== 'DELIVERED') {
+    return NextResponse.json({ error: 'Deal must be DELIVERED before dispute' }, { status: 400 })
+  }
+
   const { data: deal, error } = await admin
     .from('deals')
     .update(updateData)

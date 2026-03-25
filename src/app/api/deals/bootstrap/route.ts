@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyStellarRuntime } from '@/lib/stellar'
+import { createClient } from '@/lib/supabase/server'
 
 /**
  * POST /api/deals/bootstrap
@@ -10,6 +11,20 @@ import { verifyStellarRuntime } from '@/lib/stellar'
  */
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.role !== 'seller') {
+      return NextResponse.json({ error: 'Only sellers can call this endpoint' }, { status: 403 })
+    }
+
     const body = await request.json().catch(() => ({}))
     const contractId = body?.contractId || body?.appAddress || null
 
