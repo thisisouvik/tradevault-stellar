@@ -121,7 +121,7 @@ export function SubmitDelivery({ dealId, onSuccess }: SubmitDeliveryProps) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <p className="text-sm text-gray-600">
         Enter your shipment tracking details. We'll verify the tracking number via TrackingMore API
-        and store the SHA256 hash permanently on Algorand.
+        and store the SHA256 hash permanently on Stellar.
       </p>
 
       <div>

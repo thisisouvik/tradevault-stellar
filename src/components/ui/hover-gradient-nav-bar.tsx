@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 const menuItems = [
   { label: "How it works", href: "/#how-it-works" },
   { label: "About", href: "/about" },
-  { label: "Why Stellar?", href: "/why-algorand" },
+  { label: "Why Stellar?", href: "/why-stellar" },
 ];
 
 function HoverGradientNavBar() {

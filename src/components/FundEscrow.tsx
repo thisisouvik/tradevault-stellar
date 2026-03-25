@@ -74,7 +74,7 @@ export function FundEscrow({ dealId, appId, appAddress, amountUSDC, buyerWallet,
         <div>
           <p className="text-sm font-bold text-green-900">Escrow funded! ${amountUSDC.toLocaleString()} USDC locked in contract.</p>
           {txId && (
-            <a href={`https://lora.algokit.io/testnet/transaction/${txId}`} target="_blank" rel="noopener noreferrer"
+            <a href={`https://stellar.expert/explorer/testnet/tx/${txId}`} target="_blank" rel="noopener noreferrer"
               className="text-xs text-green-700 hover:text-green-800 flex items-center gap-1 mt-1 font-medium underline underline-offset-2">
               View transaction on explorer <ExternalLink className="w-3 h-3" />
             </a>

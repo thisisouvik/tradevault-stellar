@@ -116,7 +116,7 @@ export function TrackingTimeline({ dealId, trackingId, courier, trackingHash, ap
             <span className="text-xs font-bold uppercase tracking-wide text-green-700">On-chain cryptographic proof</span>
             {appId && (
               <a
-                href={`https://lora.algokit.io/testnet/application/${appId}`}
+                href={`https://stellar.expert/explorer/testnet/contract/${appId}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="ml-auto flex items-center gap-1 px-2 py-1 bg-white border border-green-200 rounded text-[10px] font-bold text-green-600 hover:bg-green-100 transition-colors"
@@ -126,7 +126,7 @@ export function TrackingTimeline({ dealId, trackingId, courier, trackingHash, ap
             )}
           </div>
           <p className="text-xs font-mono font-bold text-slate-700 break-all bg-white p-2 rounded border border-green-100">{trackingHash}</p>
-          <p className="text-[10px] uppercase tracking-widest text-green-600/70 font-bold mt-2">SHA256 Hash stored permanently on Stellar</p>
+            <p className="text-[10px] uppercase tracking-widest text-green-600/70 font-bold mt-2">SHA256 Hash stored permanently on Stellar</p>
         </div>
       )}
 

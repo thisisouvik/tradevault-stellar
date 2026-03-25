@@ -78,7 +78,7 @@ export function ConfirmReceipt({ dealId, appId, amountUSDC, buyerWallet, sellerW
           <p className="text-base font-bold text-green-900">Payment Released Successfully!</p>
           <p className="text-sm font-medium text-green-700 mt-1">${amountUSDC} USDC has been securely transferred to the seller.</p>
           {txId && (
-            <a href={`https://lora.algokit.io/testnet/transaction/${txId}`} target="_blank" rel="noopener noreferrer"
+            <a href={`https://stellar.expert/explorer/testnet/tx/${txId}`} target="_blank" rel="noopener noreferrer"
               className="text-xs font-bold text-green-600 hover:text-green-800 flex items-center gap-1 mt-3 bg-white border border-green-200 w-fit px-3 py-1.5 rounded-lg shadow-sm transition-colors cursor-pointer">
               View on Stellar Explorer <ExternalLink className="w-3.5 h-3.5" />
             </a>

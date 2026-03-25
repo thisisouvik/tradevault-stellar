@@ -142,7 +142,7 @@ export default function CreateDealForm() {
           <p className="mt-1 flex items-center justify-center gap-2 text-sm font-semibold text-green-700">
             App ID: {appId.startsWith('demo') ? 'Simulated' : appId}
             {txId && (
-              <a href={`https://lora.algokit.io/testnet/transaction/${txId}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-green-900 underline">
+              <a href={`https://stellar.expert/explorer/testnet/tx/${txId}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-green-900 underline">
                 <ExternalLink className="w-3 h-3"/> Verify Link
               </a>
             )}
