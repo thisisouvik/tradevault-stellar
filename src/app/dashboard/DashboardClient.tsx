@@ -12,7 +12,6 @@ import {
   ChevronRight, ExternalLink, Filter, Copy, ArrowRight, User, Clock
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { useWallet } from '@txnlab/use-wallet-react'
 
 // STATUS CONSTANTS (hidden for brevity in diff)
 const STATUS_COLORS: Record<string, string> = {
@@ -42,8 +41,8 @@ interface DashboardClientProps {
 }
 
 export default function DashboardClient({ user, profile, deals }: DashboardClientProps) {
-  const { activeAddress } = useWallet()
   const role = profile?.role || 'seller'
+  const hasWallet = Boolean(profile?.wallet_address)
   const [filter, setFilter] = useState<'ALL' | 'PROPOSED' | 'FUNDED' | 'DELIVERED' | 'COMPLETED' | 'DISPUTED' | 'ACTIVE'>('ALL')
   const [searchQuery, setSearchQuery] = useState('')
   const [showNotifications, setShowNotifications] = useState(false)
@@ -58,7 +57,7 @@ export default function DashboardClient({ user, profile, deals }: DashboardClien
   const completedDealsCount = deals.filter(d => d.status === 'COMPLETED').length
   
   // Reputation calculations
-  // Fake for now as prompt defined "pulled from Algorand" - we just mimic reading it perfectly via states.
+  // Placeholder trust metric based on completed vs disputed deals.
   const disputeRate = deals.length > 0 ? (disputedDeals.length / deals.length) * 100 : 0
   const trustColor = disputeRate < 5 ? 'text-green-500' : disputeRate <= 20 ? 'text-amber-500' : 'text-red-500'
 
@@ -256,7 +255,7 @@ export default function DashboardClient({ user, profile, deals }: DashboardClien
 
         {/* DASHBOARD CONTENT */}
         <div className="flex-1 overflow-y-auto p-8">
-          {!activeAddress ? (
+          {!hasWallet ? (
             <div className="flex flex-col items-center justify-center h-full text-center max-w-md mx-auto">
               <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6 border border-gray-200 shadow-sm">
                 <Shield className="w-10 h-10 text-gray-400" />
