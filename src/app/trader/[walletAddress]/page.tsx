@@ -11,13 +11,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return { title: `Trader ${walletAddress.slice(0, 8)}... — TradeVault` }
 }
 
-// On-chain reputation is read from Algorand transaction notes
+// On-chain reputation is read from Stellar transaction metadata.
 // For this implementation, we simulate the data structure that would
-// come from algodClient.searchForTransactions({ address: walletAddress })
+// come from Horizon/Soroban index data for this account.
 async function getOnChainReputation(walletAddress: string) {
-  // In production: fetch from Algorand indexer
-  // const indexer = new algosdk.Indexer(...)
-  // const txns = await indexer.lookupAccountTransactions(walletAddress).do()
+  // In production: fetch from Stellar indexer/Horizon
+  // const txns = await fetch(`https://horizon-testnet.stellar.org/accounts/${walletAddress}/transactions`)
   // Parse transaction notes for TradeVault reputation records
 
   // Placeholder that returns empty data until contract is deployed
@@ -69,7 +68,7 @@ export default async function TraderProfilePage({ params }: PageProps) {
           <span className="font-bold text-[#111827]">TradeVault</span>
         </Link>
         <a
-          href={`https://lora.algokit.io/testnet/account/${decodedWallet}`}
+          href={`https://stellar.expert/explorer/testnet/account/${decodedWallet}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1.5 text-xs font-semibold text-[#2563EB] hover:underline"
@@ -103,7 +102,7 @@ export default async function TraderProfilePage({ params }: PageProps) {
               <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
                 <p className="text-xs font-mono text-[#6B7280] break-all flex-1">{decodedWallet}</p>
                 <a
-                  href={`https://lora.algokit.io/testnet/account/${decodedWallet}`}
+                  href={`https://stellar.expert/explorer/testnet/account/${decodedWallet}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[#2563EB] hover:bg-blue-50 p-1 rounded flex-shrink-0"
@@ -150,7 +149,7 @@ export default async function TraderProfilePage({ params }: PageProps) {
                 All records are written to Stellar and cannot be deleted.
               </p>
               <a
-                href={`https://lora.algokit.io/testnet/account/${decodedWallet}`}
+                href={`https://stellar.expert/explorer/testnet/account/${decodedWallet}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#2563EB] hover:underline"
