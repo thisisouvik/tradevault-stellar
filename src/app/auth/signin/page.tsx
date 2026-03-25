@@ -56,7 +56,7 @@ function SignInForm() {
           className="relative z-10 flex flex-col items-center px-8 max-w-2xl w-full"
         >
           <img
-            src="/logistics-illustration.png"
+            src="/signin.svg"
             alt="TradeVault secure trading"
             className="drop-shadow-2xl object-contain"
             style={{ width: '130%', maxWidth: 'none' }}
@@ -73,7 +73,7 @@ function SignInForm() {
           className="flex flex-col items-center mt-6"
         >
           <img
-            src="/logistics-illustration.png"
+            src="/signin.svg"
             alt="TradeVault secure trading"
             className="drop-shadow-lg"
             style={{ width: '90%', maxWidth: '360px' }}
