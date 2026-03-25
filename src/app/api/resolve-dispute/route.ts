@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { callContractMethod } from '@/lib/algorand'
+import { callContractMethod } from '@/lib/stellar'
 import { sendEmail, emailTemplates } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
@@ -39,16 +39,17 @@ export async function POST(request: NextRequest) {
 
     if (arbError) return NextResponse.json({ error: 'Failed to save arbitration' }, { status: 500 })
 
-    // Call resolve_dispute() on contract
-    if (deal.contract_app_id && process.env.PLATFORM_MNEMONIC) {
+    // Call resolve_dispute() on Stellar Soroban contract
+    const contractId = deal.contract_address || deal.contract_app_id
+    if (contractId) {
       try {
         await callContractMethod(
-          parseInt(deal.contract_app_id),
           'resolve_dispute',
-          [sellerPct, buyerPct]
+          [sellerPct, buyerPct],
+          String(contractId)
         )
       } catch (err) {
-        console.warn('Contract call failed (continuing):', err)
+        console.warn('Stellar contract call failed (continuing):', err)
       }
     }
 

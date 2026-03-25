@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { callContractMethod, writeReputationNote } from '@/lib/algorand'
+import { callContractMethod, writeReputationNote } from '@/lib/stellar'
 import { sendEmail, emailTemplates } from '@/lib/email'
 
 // Called by Vercel Cron every hour: 0 * * * *
@@ -29,14 +29,15 @@ export async function GET(request: NextRequest) {
 
   for (const deal of expiredDeals) {
     const deliveredAt = new Date(deal.delivered_at)
-    const windowEnd = new Date(deliveredAt.getTime() + deal.dispute_window_days * 86400 * 1000)
+    const windowEnd = new Date(deliveredAt.getTime() + 7 * 86400 * 1000)
 
     if (now <= windowEnd) continue // Still within window
 
     try {
-      // Call timeout_release() on contract
-      if (deal.contract_app_id && process.env.PLATFORM_MNEMONIC) {
-        await callContractMethod(parseInt(deal.contract_app_id), 'timeout_release')
+      // Call timeout_release() on Stellar Soroban contract
+      const contractId = deal.contract_address || deal.contract_app_id
+      if (contractId) {
+        await callContractMethod('timeout_release', [], String(contractId))
       }
 
       // Update DB

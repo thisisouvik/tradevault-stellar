@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { sha256, callContractMethod } from '@/lib/algorand'
+import { sha256, callContractMethod } from '@/lib/stellar'
 import { verifyTrackingNumber } from '@/lib/tracking'
 import { sendEmail, emailTemplates } from '@/lib/email'
 
@@ -38,17 +38,18 @@ export async function POST(request: NextRequest) {
     // Step 2: Compute SHA256 hash of tracking number (or instant ID)
     const trackingHash = await sha256(trackingId)
 
-    // Step 3: Call submit_delivery() on contract (platform server wallet)
+    // Step 3: Call submit_delivery() on Stellar Soroban contract (server signer / relayer)
     let txId: string | undefined
-    if (deal.contract_app_id && process.env.PLATFORM_MNEMONIC) {
+    const contractId = deal.contract_address || deal.contract_app_id
+    if (contractId) {
       try {
         txId = await callContractMethod(
-          parseInt(deal.contract_app_id),
           'submit_delivery',
-          [new TextEncoder().encode(trackingHash)]
+          [trackingHash],
+          String(contractId)
         )
       } catch (err) {
-        console.warn('Failed to call contract (continuing):', err)
+        console.warn('Failed to call Stellar contract (continuing):', err)
       }
     }
 
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
       trackingId,
       courier,
       dealLink,
-      deal.dispute_window_days
+      7
     )
     await sendEmail({ to: deal.buyer_email, ...emailTemplate })
 

@@ -12,8 +12,9 @@ export async function POST(request: NextRequest) {
     const {
       buyerEmail, buyerWallet,
       itemName, itemDescription,
-      amountUSDC, deliveryDays, disputeWindowDays,
+      amountUSDC, deliveryDays,
       contractAppId, contractAddress,
+      contractId,
     } = body
 
     // Validation
@@ -39,10 +40,10 @@ export async function POST(request: NextRequest) {
         item_description: itemDescription || null,
         amount_usdc: parseInt(amountUSDC),
         delivery_days: parseInt(deliveryDays),
-        dispute_window_days: parseInt(disputeWindowDays),
+        dispute_window_days: 7,
         status: 'PROPOSED',
         contract_app_id: contractAppId || null,
-        contract_address: contractAddress || null,
+        contract_address: contractAddress || contractId || null,
       })
       .select()
       .single()
