@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from 'crypto'
+import { createHash } from 'crypto'
 
 export const STELLAR_RPC_URL = process.env.STELLAR_RPC_URL || ''
 export const STELLAR_CONTRACT_ID = process.env.STELLAR_CONTRACT_ID || ''
@@ -82,8 +82,7 @@ export async function callContractMethod(
 
   const txHash = data.txHash || data.txId || data.hash
   if (!txHash) {
-    // Keep DB flow alive even if relayer does not return hash yet.
-    return `stellar-pending-${randomUUID()}`
+    throw new Error(`Relayer did not return a tx hash for method: ${method}`)
   }
 
   return txHash
