@@ -29,6 +29,10 @@ export default async function ArbitratorPage({ params }: PageProps) {
     redirect(`/dashboard`)
   }
 
+  if (!profile?.wallet_address) {
+    redirect('/arbitrator/profile?walletRequired=1')
+  }
+
   // Use admin client to bypass RLS so the arbitrator can definitely see both
   // sides of the evidence, regardless of RLS policies on the evidence table.
   const { createAdminClient } = await import('@/lib/supabase/admin')

@@ -21,6 +21,10 @@ export default async function ArbitratorIndexPage() {
     redirect('/dashboard')
   }
 
+  if (!profile?.wallet_address) {
+    redirect('/arbitrator/profile?walletRequired=1')
+  }
+
   // Fetch all disputes assigned to this arbitrator
   // Wait, right now we don't have an arbitrator_id column on deals.
   // Deals just have status = DISPUTED. Let's fetch all disputed deals

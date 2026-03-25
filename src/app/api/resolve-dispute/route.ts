@@ -10,6 +10,23 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+    const { data: actorProfile } = await supabase
+      .from('profiles')
+      .select('role, wallet_address')
+      .eq('id', user.id)
+      .single()
+
+    if (actorProfile?.role !== 'arbitrator') {
+      return NextResponse.json({ error: 'Only arbitrators can resolve disputes' }, { status: 403 })
+    }
+
+    if (!actorProfile?.wallet_address) {
+      return NextResponse.json(
+        { error: 'Arbitrator wallet is not connected. Please configure wallet first.' },
+        { status: 403 }
+      )
+    }
+
     const { dealId, sellerPct, buyerPct, notes } = await request.json()
 
     if (sellerPct + buyerPct !== 100) {

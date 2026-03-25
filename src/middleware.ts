@@ -51,11 +51,12 @@ export async function middleware(request: NextRequest) {
   if (user && (pathname.startsWith('/deal/new') || pathname.startsWith('/arbitrator'))) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, wallet_address')
       .eq('id', user.id)
       .single()
 
     const role = profile?.role
+    const walletAddress = profile?.wallet_address
 
     // Only sellers can create deals
     if (pathname.startsWith('/deal/new') && role !== 'seller') {
@@ -68,6 +69,20 @@ export async function middleware(request: NextRequest) {
     if (pathname.startsWith('/arbitrator') && role !== 'arbitrator') {
       const url = request.nextUrl.clone()
       url.pathname = '/dashboard'
+      return NextResponse.redirect(url)
+    }
+
+    // Arbitrator wallet must be registered before opening queue/case details.
+    // Keep /arbitrator/profile accessible so wallet can be configured there.
+    if (
+      pathname.startsWith('/arbitrator') &&
+      !pathname.startsWith('/arbitrator/profile') &&
+      role === 'arbitrator' &&
+      !walletAddress
+    ) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/arbitrator/profile'
+      url.searchParams.set('walletRequired', '1')
       return NextResponse.redirect(url)
     }
   }
