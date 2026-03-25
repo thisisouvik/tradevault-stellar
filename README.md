@@ -80,6 +80,42 @@ npm run dev
 
 Open http://localhost:3000.
 
+## Stellar Helper Scripts
+
+TradeVault includes Stellar-native helper scripts that replace the legacy chain scripts.
+
+1. Generate a new Stellar wallet keypair:
+
+```bash
+npm run stellar:wallet:generate
+```
+
+This prints a new keypair and saves the output to `scripts/wallet_output.txt`.
+
+2. Write wallet keys into `.env.local`:
+
+```bash
+npm run stellar:wallet:setup -- --secret S... --public G...
+```
+
+3. Deploy Soroban contract wasm using Stellar CLI:
+
+```bash
+npm run stellar:contract:deploy -- --wasm ./path/to/contract.wasm --source your-identity --network testnet
+```
+
+On success, deploy script updates:
+
+- `STELLAR_CONTRACT_ID`
+- `NEXT_PUBLIC_STELLAR_CONTRACT_ID`
+
+in `.env.local`.
+
+Notes:
+
+- Contract deployment requires Stellar CLI (`stellar`) installed and configured.
+- `--source` must be an identity already available to the CLI key store.
+
 ## Database
 
 - SQL schema and migrations are under `supabase/`
