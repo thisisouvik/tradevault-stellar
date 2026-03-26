@@ -4,6 +4,8 @@ import Link from 'next/link'
 import CreateDealForm from '@/components/CreateDealForm'
 import { ArrowLeft, Shield } from 'lucide-react'
 import type { Metadata } from 'next'
+import { WalletRequiredModal } from '@/components/WalletRequiredModal'
+import { WalletConnect } from '@/components/WalletConnect'
 
 export const metadata: Metadata = { title: 'Create New Contract' }
 
@@ -12,24 +14,44 @@ export default async function NewDealPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/signin?redirectTo=/deal/new')
 
+  // Enforce connected wallet to create a deal
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('wallet_address')
+    .eq('id', user.id)
+    .single()
+
+  const needsWallet = !profile?.wallet_address
+
   return (
-    <div className="min-h-screen bg-gray-50 text-slate-900 font-sans flex flex-col">
+    <>
+      <WalletRequiredModal isOpen={needsWallet} />
+      <div className="min-h-screen bg-gray-50 text-slate-900 font-sans flex flex-col">
       {/* Header */}
       <header className="h-16 bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-[1200px] mx-auto h-full px-6 flex items-center justify-between">
-          <Link 
-            href="/dashboard" 
-            className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
-          </Link>
+          
+          <div className="w-1/3 flex justify-start">
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Back to Dashboard</span>
+            </Link>
+          </div>
 
-          <Link href="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="TradeVault" className="w-6 h-6 object-contain" />
-            <span className="text-[#05445E] font-bold text-lg tracking-tight hidden sm:block">TradeVault</span>
-          </Link>
-          <div className="w-[124px] hidden sm:block" />{/* Spacer to keep center alignment */}
+          <div className="w-1/3 flex justify-center">
+            <Link href="/" className="flex items-center gap-2">
+              <img src="/logo.png" alt="TradeVault" className="w-6 h-6 object-contain" />
+              <span className="text-[#05445E] font-bold text-lg tracking-tight hidden sm:block">TradeVault</span>
+            </Link>
+          </div>
+
+          <div className="w-1/3 flex justify-end">
+            <WalletConnect />
+          </div>
+
         </div>
       </header>
 
@@ -45,5 +67,6 @@ export default async function NewDealPage() {
         <CreateDealForm />
       </main>
     </div>
+    </>
   )
 }
