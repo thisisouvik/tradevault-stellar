@@ -40,6 +40,7 @@ pub struct TradeVaultEscrow;
 impl TradeVaultEscrow {
     pub fn create_deal(
         env: Env,
+        seller: Address,
         buyer: Address,
         arbitrator: Address,
         token: Address,
@@ -47,8 +48,7 @@ impl TradeVaultEscrow {
         delivery_days: u32,
         dispute_days: u32,
     ) {
-        let creator = env.invoker();
-        creator.require_auth();
+        seller.require_auth();
 
         if amount_usdc <= 0 {
             panic!("amount must be > 0");
@@ -64,7 +64,7 @@ impl TradeVaultEscrow {
             panic!("deal already initialized");
         }
 
-        env.storage().instance().set(&DataKey::Seller, &creator);
+        env.storage().instance().set(&DataKey::Seller, &seller);
         env.storage().instance().set(&DataKey::Buyer, &buyer);
         env.storage().instance().set(&DataKey::Arbitrator, &arbitrator);
         env.storage().instance().set(&DataKey::Token, &token);

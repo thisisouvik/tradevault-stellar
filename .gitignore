@@ -1,6 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
+# ==========================================
+# Node.js / npm / Next.js
+# ==========================================
 /node_modules
 /.pnp
 .pnp.*
@@ -10,33 +12,114 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
-
-# next.js
+# Next.js
 /.next/
 /out/
-
-# production
 /build
+dist/
 
-# misc
-.DS_Store
-*.pem
-
-# debug
+# npm & yarn
 npm-debug.log*
+npm-error.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+.npm
 
-# env files (can opt-in for committing if needed)
-.env*
+# Turbo cache
+.turbo/
+.swc/
+
+# ==========================================
+# Rust / Cargo / Soroban Contract Build
+# ==========================================
+contract/target/
+contract/Cargo.lock
+**/*.rlib
+**/*.so
+**/*.dylib
+**/*.a
+
+# ==========================================
+# Environment & Secrets
+# ==========================================
+.env
+.env.local
+.env.production.local
+.env.development.local
+.env.test.local
 !.env.local.example
+!.env.example
 
-# vercel
+# Sensitive files
+*.key
+*.secret
+*.pem
+*.p8
+scripts/wallet_output.txt
+wallet_*.txt
+**/secrets/
+**/private/
+
+# ==========================================
+# IDE & Editor
+# ==========================================
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+
+# ==========================================
+# Operating System
+# ==========================================
+Thumbs.db
+ehthumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ==========================================
+# Testing & Coverage
+# ==========================================
+/coverage
+.nyc_output
+*.lcov
+
+# ==========================================
+# Build & Distribution
+# ==========================================
+dist/
+.cache/
+.tsbuildinfo
+
+# ==========================================
+# Vercel / Hosting
+# ==========================================
 .vercel
 
-# typescript
+# ==========================================
+# Project Specific
+# ==========================================
+# Supabase local dev (if using)
+supabase/.branches/
+supabase/.temp/
+
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Logs
+logs/
+*.log
