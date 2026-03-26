@@ -18,8 +18,7 @@ export function WalletConnect({ onConnect }: WalletConnectProps) {
 
   // Modal states
   const [showModal, setShowModal] = useState(false)
-  const [modalView, setModalView] = useState<'options' | 'qr'>('options')
-  
+
   const [mounted, setMounted] = useState(false)
   const supabase = createClient()
 
@@ -96,7 +95,6 @@ export function WalletConnect({ onConnect }: WalletConnectProps) {
       
       // Close modal on success
       setShowModal(false)
-      setTimeout(() => setModalView('options'), 200)
     } catch (err: any) {
       setError(err?.message || 'Failed to connect Freighter. Make sure it\'s unlocked.')
     }
@@ -117,9 +115,7 @@ export function WalletConnect({ onConnect }: WalletConnectProps) {
 
   function closeModal() {
     setShowModal(false)
-    // Reset view after animation
     setTimeout(() => {
-      setModalView('options')
       setError('')
     }, 200)
   }
@@ -184,7 +180,7 @@ export function WalletConnect({ onConnect }: WalletConnectProps) {
               {/* Header */}
               <div className="flex items-center justify-between p-5 border-b border-slate-100">
                 <h3 className="font-bold text-lg text-[#05445E]">
-                  {modalView === 'options' ? 'Connect Wallet' : 'Mobile Connect'}
+                  Connect Wallet
                 </h3>
                 <button
                   onClick={closeModal}
@@ -202,16 +198,15 @@ export function WalletConnect({ onConnect }: WalletConnectProps) {
                   </div>
                 )}
 
-                {modalView === 'options' ? (
-                  <div className="space-y-3">
-                    <button
-                      onClick={handleFreighterConnect}
-                      className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-100 hover:border-[#189AB4] hover:bg-teal-50/30 transition-all group text-left"
-                    >
-                      <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-[#189AB4] group-hover:text-white transition-colors text-[#05445E]">
-                        <Monitor className="w-6 h-6" />
-                      </div>
-                      <div>
+                <div className="space-y-3">
+                  <button
+                    onClick={handleFreighterConnect}
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-100 hover:border-[#189AB4] hover:bg-teal-50/30 transition-all group text-left"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-[#189AB4] group-hover:text-white transition-colors text-[#05445E]">
+                      <Monitor className="w-6 h-6" />
+                    </div>
+                    <div>
                         <div className="font-bold text-slate-900 group-hover:text-[#05445E] transition-colors">
                           Browser Extension
                         </div>
@@ -220,45 +215,7 @@ export function WalletConnect({ onConnect }: WalletConnectProps) {
                         </div>
                       </div>
                     </button>
-
-                    <button
-                      onClick={() => {
-                        setError('')
-                        setModalView('qr')
-                      }}
-                      className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-100 hover:border-[#189AB4] hover:bg-teal-50/30 transition-all group text-left"
-                    >
-                      <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-[#189AB4] group-hover:text-white transition-colors text-[#05445E]">
-                        <QrCode className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <div className="font-bold text-slate-900 group-hover:text-[#05445E] transition-colors">
-                          Mobile Wallet
-                        </div>
-                        <div className="text-xs text-slate-500 font-medium">
-                          Scan QR with Freighter app
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center py-4 text-center animate-in fade-in">
-                    <div className="w-48 h-48 bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl mb-5 flex flex-col items-center justify-center text-slate-400">
-                      <QrCode className="w-12 h-12 mb-2 opacity-50" />
-                      <span className="text-[10px] font-bold tracking-widest uppercase opacity-50">QR Code</span>
-                    </div>
-                    <h4 className="font-bold text-[#05445E] mb-1">Coming Soon</h4>
-                    <p className="text-xs text-slate-500 mb-6 px-2 leading-relaxed">
-                      Mobile connection using deep-linking is being prepared. Meanwhile, please use the browser extension.
-                    </p>
-                    <button
-                      onClick={() => setModalView('options')}
-                      className="text-sm font-bold text-[#189AB4] hover:text-[#05445E] transition-colors"
-                    >
-                      ← Back to Options
-                    </button>
-                  </div>
-                )}
+                </div>
               </div>
             </motion.div>
           </div>
