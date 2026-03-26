@@ -57,9 +57,14 @@ function main() {
     process.exit(1);
   }
 
-  const resolvedWasm = path.resolve(process.cwd(), wasmPath);
-  if (!fs.existsSync(resolvedWasm)) {
-    console.error(`WASM file not found: ${resolvedWasm}`);
+  const candidates = [
+    path.resolve(process.cwd(), wasmPath),
+    path.resolve(__dirname, '..', wasmPath),
+  ];
+  const resolvedWasm = candidates.find((p) => fs.existsSync(p));
+
+  if (!resolvedWasm) {
+    console.error(`WASM file not found. Tried:\n- ${candidates.join('\n- ')}`);
     process.exit(1);
   }
 

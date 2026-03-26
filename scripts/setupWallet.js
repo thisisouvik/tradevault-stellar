@@ -31,8 +31,9 @@ function upsertLine(content, key, value) {
 }
 
 function main() {
-  const secret = getArg('--secret');
-  const pub = getArg('--public');
+  const positional = process.argv.slice(2).filter((arg) => !arg.startsWith('--'));
+  const secret = getArg('--secret') || positional[0];
+  const pub = getArg('--public') || positional[1];
   const fileArg = getArg('--file');
   const envPath = fileArg
     ? path.resolve(process.cwd(), fileArg)
