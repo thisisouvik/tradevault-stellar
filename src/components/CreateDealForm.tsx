@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { PackagePlus, DollarSign, Clock, Mail, FileText, AlertCircle, CheckCircle2, Shield, AlertTriangle, ExternalLink } from 'lucide-react'
+import { PackagePlus, DollarSign, Clock, Mail, FileText, AlertCircle, CheckCircle2, Shield, AlertTriangle, ExternalLink, Wallet, Loader } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 export default function CreateDealForm() {
@@ -24,6 +24,27 @@ export default function CreateDealForm() {
   const [error, setError] = useState('')
   const [txId, setTxId] = useState('')
   const [appId, setAppId] = useState('')
+  const [connectingWallet, setConnectingWallet] = useState(false)
+
+  async function connectBuyerWallet() {
+    try {
+      setConnectingWallet(true)
+      if (typeof window === 'undefined' || !(window as any).freighter) {
+        setError('Freighter wallet not installed. Please install it from https://www.freighter.app')
+        return
+      }
+      const freighter = (window as any).freighter
+      const publicKey = await freighter.getPublicKey()
+      if (publicKey) {
+        setForm(prev => ({ ...prev, buyerWallet: publicKey }))
+        setError('')
+      }
+    } catch (err) {
+      setError('Failed to connect wallet. Make sure Freighter is unlocked.')
+    } finally {
+      setConnectingWallet(false)
+    }
+  }
 
   function updateForm(field: string, value: string) {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -258,14 +279,35 @@ export default function CreateDealForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Buyer Wallet Address *</label>
-                <input
-                  type="text"
-                  value={form.buyerWallet}
-                  onChange={e => updateForm('buyerWallet', e.target.value)}
-                  placeholder="Stellar wallet address..."
-                  required
-                  className="w-full px-3 py-2 rounded-md text-sm font-mono text-gray-900 border border-gray-300 outline-none focus:ring-1 focus:border-[#189AB4]"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={form.buyerWallet}
+                    onChange={e => updateForm('buyerWallet', e.target.value)}
+                    placeholder="Stellar wallet address..."
+                    required
+                    className="flex-1 px-3 py-2 rounded-md text-sm font-mono text-gray-900 border border-gray-300 outline-none focus:ring-1 focus:border-[#189AB4]"
+                  />
+                  <button
+                    type="button"
+                    onClick={connectBuyerWallet}
+                    disabled={connectingWallet}
+                    className="px-3 py-2 bg-[#189AB4] text-white text-sm font-semibold rounded-md hover:bg-[#05445E] disabled:bg-gray-400 transition flex items-center gap-2 whitespace-nowrap"
+                  >
+                    {connectingWallet ? (
+                      <>
+                        <Loader className="w-4 h-4 animate-spin" />
+                        Connecting...
+                      </>
+                    ) : (
+                      <>
+                        <Wallet className="w-4 h-4" />
+                        Auto-fill
+                      </>
+                    )}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Click "Auto-fill" to connect buyer's Freighter wallet</p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Buyer Email *</label>
