@@ -10,6 +10,7 @@ const menuItems = [
   { label: "How it works", href: "/#how-it-works" },
   { label: "About", href: "/about" },
   { label: "Why Stellar?", href: "/why-stellar" },
+  { label: "Deployment Status", href: "/status" },
 ];
 
 function HoverGradientNavBar() {
