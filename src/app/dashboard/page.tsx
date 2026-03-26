@@ -17,6 +17,8 @@ export default async function DashboardPage() {
     .eq('id', user.id)
     .single()
 
+  const needsWallet = !profile?.wallet_address
+
   const role = profile?.role || 'seller'
   let deals: any[] = []
 

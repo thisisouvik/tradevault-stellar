@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { WalletConnect } from '@/components/WalletConnect'
+import { WalletRequiredModal } from '@/components/WalletRequiredModal'
 import {
   Shield, Search, Bell, Mail,
   LayoutDashboard, FileText, Settings, HelpCircle,
@@ -115,7 +116,9 @@ export default function DashboardClient({ user, profile, deals }: DashboardClien
         ]
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden text-slate-900 font-sans">
+    <>
+      <WalletRequiredModal isOpen={!hasWallet} />
+      <div className="flex h-screen bg-gray-50 overflow-hidden text-slate-900 font-sans">
       
       {/* CLEAN SIDEBAR */}
       <aside className="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 z-20">
@@ -427,5 +430,6 @@ export default function DashboardClient({ user, profile, deals }: DashboardClien
         </div>
       </main>
     </div>
+    </>
   )
 }
