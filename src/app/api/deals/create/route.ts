@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
         delivery_days: parsedDeliveryDays,
         dispute_window_days: 7,
         status: 'PROPOSED',
-        contract_app_id: contractAppId || null,
+        contract_app_id: contractAppId || contractId || null,
         contract_address: contractAddress || contractId || null,
       })
       .select()

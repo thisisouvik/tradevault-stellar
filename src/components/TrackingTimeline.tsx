@@ -16,7 +16,7 @@ interface TrackingTimelineProps {
   trackingId: string
   courier: string
   trackingHash?: string
-  appId?: number
+  appId?: string
 }
 
 const STATUS_ICON: Record<string, React.ReactNode> = {
@@ -121,7 +121,7 @@ export function TrackingTimeline({ dealId, trackingId, courier, trackingHash, ap
                 rel="noopener noreferrer"
                 className="ml-auto flex items-center gap-1 px-2 py-1 bg-white border border-green-200 rounded text-[10px] font-bold text-green-600 hover:bg-green-100 transition-colors"
               >
-                Verify on Lora <ExternalLink className="w-3 h-3" />
+                Verify on Stellar <ExternalLink className="w-3 h-3" />
               </a>
             )}
           </div>

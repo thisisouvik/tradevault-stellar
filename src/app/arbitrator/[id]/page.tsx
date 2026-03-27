@@ -77,7 +77,7 @@ export default async function ArbitratorPage({ params }: PageProps) {
     arbitration = arbData || null
   }
 
-  const appId = deal.contract_app_id ? parseInt(deal.contract_app_id) : 0
+  const appId = deal.contract_app_id || ''
 
   return (
     <ArbitratorReviewClient 

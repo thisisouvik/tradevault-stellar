@@ -192,7 +192,7 @@ export default async function DealPage({ params }: PageProps) {
             </div>
             <p className="text-base font-bold text-slate-800 relative z-10">{seller?.name}</p>
             <p className="text-xs font-mono text-slate-500 break-all bg-slate-50 p-2.5 rounded-lg border border-slate-100 mt-2 font-medium relative z-10">
-              {seller?.wallet_address || 'Wallet not registered'}
+              {sellerWallet || seller?.wallet_address || 'Wallet not registered'}
             </p>
           </div>
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 relative overflow-hidden">

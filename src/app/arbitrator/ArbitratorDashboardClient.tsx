@@ -87,7 +87,7 @@ export default function ArbitratorDashboardClient({ profile, activeDisputes, res
           </div>
 
           <div className="flex items-center gap-4">
-            <WalletConnect />
+            <WalletConnect showBalance={false} />
           </div>
         </header>
 

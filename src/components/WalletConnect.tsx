@@ -8,9 +8,10 @@ import { setAllowed, isAllowed, getAddress, isConnected } from '@stellar/freight
 
 interface WalletConnectProps {
   onConnect?: (address: string) => void
+  showBalance?: boolean
 }
 
-export function WalletConnect({ onConnect }: WalletConnectProps) {
+export function WalletConnect({ onConnect, showBalance = true }: WalletConnectProps) {
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState('')
   const [walletAddress, setWalletAddress] = useState('')
@@ -123,13 +124,15 @@ export function WalletConnect({ onConnect }: WalletConnectProps) {
   // Already connected view
   if (mounted && walletAddress) {
     return (
-      <div className="flex items-center gap-3 px-3 py-2 rounded-xl" style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)' }}>  
-        <div className="flex items-center gap-2 pr-3 border-r border-[#4ade80]/20">
-          <div className="flex flex-col text-[10px] sm:text-xs">
-            <span className="text-[#05445E] font-semibold">{balances.xlm} XLM</span>
-            <span className="text-slate-500 font-medium">{balances.usdc} USDC</span>
+      <div className="flex items-center gap-3 px-3 py-2 rounded-xl" style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)' }}>
+        {showBalance && (
+          <div className="flex items-center gap-2 pr-3 border-r border-[#4ade80]/20">
+            <div className="flex flex-col text-[10px] sm:text-xs">
+              <span className="text-[#05445E] font-semibold">{balances.xlm} XLM</span>
+              <span className="text-slate-500 font-medium">{balances.usdc} USDC</span>
+            </div>
           </div>
-        </div>
+        )}
         <div className="w-2 h-2 rounded-full bg-[#4ade80] animate-pulse" />     
         <span className="text-sm font-mono text-[#4ade80] font-medium">{shortAddr(walletAddress)}</span>
         <div className="flex items-center gap-1 ml-1">

@@ -3,10 +3,12 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react'
+import { isAllowed, setAllowed, getAddress, signTransaction } from '@stellar/freighter-api'
+import { Horizon, Asset, TransactionBuilder, Operation, Networks } from '@stellar/stellar-sdk'
 
 interface ConfirmReceiptProps {
   dealId: string
-  appId: number
+  appId: string
   amountUSDC: number
   buyerWallet: string
   sellerWallet: string
@@ -21,7 +23,6 @@ export function ConfirmReceipt({ dealId, appId, amountUSDC, buyerWallet, sellerW
   const [confirmed, setConfirmed] = useState(false)
   void appId
   void buyerWallet
-  void sellerWallet
 
   async function handleConfirm() {
     if (!confirmed) return
@@ -29,23 +30,52 @@ export function ConfirmReceipt({ dealId, appId, amountUSDC, buyerWallet, sellerW
     setLoading(true)
 
     try {
-      const onchainRes = await fetch(`/api/deals/${dealId}/onchain`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'confirm' }),
-      })
+      if (!(await isAllowed())) await setAllowed()
+      const { address } = await getAddress()
+      if (!address) throw new Error('Could not get Freighter address. Please unlock your wallet.')  
 
-      const onchainData = await onchainRes.json().catch(() => ({}))
-      if (!onchainRes.ok) {
-        throw new Error(onchainData?.error || 'Failed to execute confirm action on Stellar')
+      if (!sellerWallet) {
+        throw new Error('Seller wallet address is missing. Cannot release funds.')
       }
 
-      const txHash = String(onchainData.txHash || '')
-      const status = String(onchainData.status || 'COMPLETED')
-      const chainNetwork = String(onchainData.chainNetwork || 'stellar')
-      setTxId(txHash)
+      const server = new Horizon.Server("https://horizon-testnet.stellar.org")
+      const userAccount = await server.loadAccount(address)
 
-      // Update DB
+      // Find USDC balance to correctly identify the testnet issuer
+      const usdcBalance = userAccount.balances.find((b: any) => b.asset_type !== 'native' && b.asset_code === 'USDC') as any
+      if (!usdcBalance || Number(usdcBalance.balance) < amountUSDC) {
+        throw new Error(`Insufficient USDC balance to release funds.`)
+      }
+
+      const usdcAsset = new Asset('USDC', usdcBalance.asset_issuer)
+
+      // We explicitly transfer the funds to the Seller's Wallet directly from the smart contract/buyer
+      const txPayment = new TransactionBuilder(userAccount, {
+        fee: "10000",
+        networkPassphrase: Networks.TESTNET,
+      })
+        .addOperation(Operation.payment({
+          destination: sellerWallet,
+          asset: usdcAsset,
+          amount: amountUSDC.toString(),
+        }))
+        .setTimeout(30)
+        .build();
+
+      const signedResponse = await signTransaction(txPayment.toXDR(), {
+        networkPassphrase: Networks.TESTNET
+      })
+
+      const finalXdr = typeof signedResponse === "string" ? signedResponse : (signedResponse as any).signedTxXdr || (signedResponse as any).signedTransaction   
+      if (!finalXdr) throw new Error("Signature failed or was cancelled")
+
+      const signedTx = TransactionBuilder.fromXDR(finalXdr, Networks.TESTNET)
+
+      // Submit to Stellar
+      const submitted = await server.submitTransaction(signedTx as any)
+      const txHash = submitted.hash
+      const status = 'COMPLETED'
+      const chainNetwork = 'stellar'
       const updateRes = await fetch(`/api/deals/${dealId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },

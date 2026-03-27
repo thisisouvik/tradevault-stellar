@@ -101,7 +101,7 @@ export default function CreateDealForm() {
           amountUSDC: amount,
           deliveryDays: parseInt(form.deliveryDays),
           disputeWindowDays: parseInt(form.disputeWindowDays),
-          contractId: configuredContractId,
+          contractAppId: configuredContractId,
           contractAddress: configuredContractId,
           arbitrator: 'default',
         }),

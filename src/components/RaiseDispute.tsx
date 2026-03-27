@@ -6,7 +6,7 @@ import { AlertTriangle, AlertCircle } from 'lucide-react'
 
 interface RaiseDisputeProps {
   dealId: string
-  appId: number
+  appId: string
   buyerWallet: string
   onSuccess: () => void
 }

@@ -57,7 +57,7 @@ export function DealDetailClient({
     window.location.reload()
   }
 
-  const appId = deal.contract_app_id ? parseInt(deal.contract_app_id) : 0
+  const appId = deal.contract_app_id || deal.contract_address || ''
 
   return (
     <div className="space-y-6">
@@ -118,7 +118,7 @@ export function DealDetailClient({
       <AnimatePresence mode="wait">
         
         {/* PROPOSED — buyer needs to fund */}
-        {deal.status === 'PROPOSED' && isBuyer && appId > 0 && deal.contract_address && (
+        {deal.status === 'PROPOSED' && isBuyer && appId.length > 0 && deal.contract_address && (
           <motion.div
             key="fund"
             initial={{ opacity: 0, y: 10 }}
@@ -205,7 +205,7 @@ export function DealDetailClient({
             className="space-y-6"
           >
 
-            {isBuyer && appId > 0 && (
+            {isBuyer && appId.length > 0 && (
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
                 <h3 className="text-lg font-extrabold text-[#05445E] mb-2">Confirm or Dispute</h3>
                 <p className="text-sm text-slate-500 mb-6 font-medium">

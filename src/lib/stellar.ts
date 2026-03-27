@@ -50,6 +50,10 @@ export async function callContractMethod(
   const { url, token } = getRelayerConfig()
 
   if (!url) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('STELLAR_RELAYER_URL missing. Returning mock transaction hash for development.')
+      return `mock_tx_${Date.now()}`
+    }
     throw new Error('STELLAR_RELAYER_URL is not configured')
   }
 

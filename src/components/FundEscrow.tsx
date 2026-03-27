@@ -4,9 +4,12 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Wallet, Zap, AlertCircle, CheckCircle2, ExternalLink } from 'lucide-react'
 
+import { isAllowed, setAllowed, getAddress, signTransaction } from '@stellar/freighter-api'
+import { Horizon, Asset, TransactionBuilder, Operation, Networks } from '@stellar/stellar-sdk'
+
 interface FundEscrowProps {
   dealId: string
-  appId: number
+  appId: string
   appAddress: string
   amountUSDC: number
   buyerWallet: string
@@ -24,30 +27,57 @@ export function FundEscrow({ dealId, appId, appAddress, amountUSDC, buyerWallet,
     setError('')
     setLoading(true)
     try {
-      const onchainRes = await fetch(`/api/deals/${dealId}/onchain`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'fund' }),
-      })
+      if (!(await isAllowed())) await setAllowed()
+      const { address } = await getAddress()
+      if (!address) throw new Error('Could not get Freighter address. Please unlock your wallet.')
+      
+      const server = new Horizon.Server("https://horizon-testnet.stellar.org")
+      const userAccount = await server.loadAccount(address)
 
-      const onchainData = await onchainRes.json().catch(() => ({}))
-      if (!onchainRes.ok) {
-        throw new Error(onchainData?.error || 'Failed to execute fund action on Stellar')
+      // Find USDC balance to correctly identify the testnet issuer 
+      const usdcBalance = userAccount.balances.find((b: any) => b.asset_type !== 'native' && b.asset_code === 'USDC') as any
+      if (!usdcBalance || Number(usdcBalance.balance) < amountUSDC) {
+        throw new Error(`Insufficient USDC balance. You need ${amountUSDC} USDC. Use the Dev Faucet!`)
       }
 
-      const txHash = String(onchainData.txHash || '')
-      const status = String(onchainData.status || 'FUNDED')
-      const chainNetwork = String(onchainData.chainNetwork || 'stellar')
-      setTxId(txHash)
+// We verify the buyer has the funds and sign a cryptographic proof on-chain.
+      // Since we don't have a Soroban smart contract currently deployed to hold funds natively,
+      // we do a 0-value transaction here to 'sign' the agreement and lock the state.
+      // The actual transfer to the seller will occur in ConfirmReceipt.tsx.
+      const txPayment = new TransactionBuilder(userAccount, {
+        fee: "10000",
+        networkPassphrase: Networks.TESTNET,
+      })
+        .addOperation(Operation.manageData({
+          name: "TradeVault_Lock",
+          value: dealId.substring(0, 64)
+        }))
+        .setTimeout(30)
+        .build();
 
-      // Update DB status
+      const signedResponse = await signTransaction(txPayment.toXDR(), { 
+        networkPassphrase: Networks.TESTNET
+      })
+      
+      const finalXdr = typeof signedResponse === "string" ? signedResponse : (signedResponse as any).signedTxXdr || (signedResponse as any).signedTransaction
+      if (!finalXdr) throw new Error("Signature failed or was cancelled")
+
+      const signedTx = TransactionBuilder.fromXDR(finalXdr, Networks.TESTNET)
+      
+      // Submit to Stellar
+      const submitted = await server.submitTransaction(signedTx as any)
+      const realTxHash = submitted.hash
+
+      setTxId(realTxHash)
+
+      // Update DB status with the verified hash
       const updateRes = await fetch(`/api/deals/${dealId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          status,
-          txHash,
-          chainNetwork,
+          status: 'FUNDED',
+          txHash: realTxHash,
+          chainNetwork: 'stellar',
         }),
       })
 
@@ -60,9 +90,36 @@ export function FundEscrow({ dealId, appId, appAddress, amountUSDC, buyerWallet,
       setTimeout(() => onSuccess(), 1500)
     } catch (err: any) {
       console.error(err)
-      const msg = err?.message || 'Transaction failed'
+      let msg = err?.message || 'Transaction failed'
+      // Extract inner Horizon errors if available
+      if (err?.response?.data?.extras?.result_codes?.operations) {
+        msg += " (" + err.response.data.extras.result_codes.operations.join(", ") + ")"
+      }
       setError(msg)
     } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleReject() {
+    setError('')
+    setLoading(true)
+    try {
+      const updateRes = await fetch(`/api/deals/${dealId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'CANCELLED' }),
+      })
+
+      if (!updateRes.ok) {
+        const updateData = await updateRes.json().catch(() => ({}))
+        throw new Error(updateData?.error || 'Failed to cancel the contract.')
+      }
+
+      onSuccess()
+    } catch (err: any) {
+      console.error(err)
+      setError(err?.message || 'Cancellation failed')
       setLoading(false)
     }
   }
@@ -126,7 +183,7 @@ export function FundEscrow({ dealId, appId, appAddress, amountUSDC, buyerWallet,
               transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
               className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full"
             />
-            Processing on Stellar...
+            Processing...
           </>
         ) : (
           <>
@@ -135,6 +192,15 @@ export function FundEscrow({ dealId, appId, appAddress, amountUSDC, buyerWallet,
           </>
         )}
       </motion.button>
+      
+      {!loading && (
+        <button
+          onClick={handleReject}
+          className="w-full text-center text-sm font-bold text-slate-500 hover:text-red-500 transition-colors mt-2"
+        >
+          Reject Contract
+        </button>
+      )}
     </div>
   )
 }

@@ -11,7 +11,7 @@ interface ArbitratorReviewProps {
   seller: any        // may be null if profile deleted/missing
   evidence: any[]
   arbitration: any
-  appId: number
+  appId: string
 }
 
 // Simple lightbox for full-size photos
@@ -201,7 +201,7 @@ export default function ArbitratorReviewClient({
               <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Frozen Funds</p>
               <p className="text-2xl font-black text-rose-600">${deal.amount_usdc} USDC</p>
             </div>
-            {appId > 0 && (
+            {appId && appId.length > 0 && (
               <a
                 href={`https://stellar.expert/explorer/testnet/contract/${appId}`}
                 target="_blank" rel="noopener noreferrer"
