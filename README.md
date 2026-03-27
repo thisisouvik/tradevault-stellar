@@ -20,12 +20,58 @@
 ## 📖 What is TradeVault?
 TradeVault is a secure, trustless, decentralized escrow marketplace built on the Stellar network. It eliminates the risk of fraud in peer-to-peer online transactions by locking funds (USDC) securely inside a Soroban smart contract. Funds are only released when both parties are satisfied, or after a fair resolution by an independent platform Arbitrator.
 
+## ⚠️ The Current Gap
+In today's digital economy, transacting with unknown parties across the globe is incredibly risky. 
+- **For Buyers:** Paying upfront without a guarantee of delivery often leads to scams.
+- **For Sellers:** Delivering work or shipping physical goods before payment exposes them to chargebacks and non-payment.
+- **Legacy Solutions:** Traditional escrow platforms (like Escrow.com) or freelance marketplaces (like Upwork/Fiverr) charge exorbitant fees (often 5% to 20%), require lengthy KYC delays, hold funds for weeks, and process slow cross-border fiat settlements. 
+
+## 💡 What We Provide (Our USP)
+TradeVault provides a **trustless, instant, and low-cost** alternative by moving the escrow process entirely on-chain using Stellar's Soroban smart contracts. 
+- **Zero Middleman Risk:** We don't hold your funds. They are locked cryptographically in a smart contract.
+- **Fractional Fees:** Leveraging the Stellar network, transaction fees are pennies, compared to hundreds of dollars on legacy platforms.
+- **Global & Permissionless:** Anyone with a Freighter wallet can instantly lock USDC and conduct business globally without banking restrictions.
+- **Fair Dispute Resolution:** If things go wrong, an impartial platform Arbitrator steps in to fairly distribute the locked funds based on evidence, preventing unilateral chargebacks.
+
+## 🏢 Use Cases & Example Projects
+TradeVault is flexible enough to handle almost any peer-to-peer transaction:
+1. **Freelance Contracts:** A freelance developer in India builds a website for a client in the US. The client locks $5,000 USDC in TradeVault. The developer builds with peace of mind knowing the funds are secured. Once the site is delivered, the funds are instantly released.
+2. **High-Value Digital Assets:** Buying or selling domains, social media accounts, or rare game items. TradeVault ensures the buyer has the funds and the seller delivers the asset before the swap finalizes.
+3. **Physical Goods Delivery:** Purchasing a luxury watch from an international seller. The funds are locked up until the buyer confirms the tracking number shows "Delivered" and the item is authentic.
+4. **Over-The-Counter (OTC) Crypto Trades:** Large buyers and sellers exchanging tokens without trusting a centralized exchange to hold custody.
+
+## 📊 Market Analysis: Traditional vs. Decentralized Escrow
+
+**Major Inefficiencies in the Traditional Escrow Market:**
+```mermaid
+pie
+    "High Middleman Fees (up to 5-10%)" : 45
+    "Slow Cross-Border Settlement" : 25
+    "Lack of Transparency" : 20
+    "High Fraud / Chargeback Rates" : 10
+```
+
+TradeVault directly addresses these pain points by utilizing Stellar's near-instant block finality and mathematically proven Soroban smart contracts.
+
+## 💰 Business Scope & Platform Fees
+TradeVault introduces a highly scalable and sustainable revenue model while remaining an order of magnitude cheaper than centralized competitors:
+- **Contract Interaction Fee:** A flat fee (e.g., ~$1-2) or a minimal percentage (e.g., 0.5% - 1%) charged upon the successful release of funds, drastically undercutting traditional 5-10% fees.
+- **Arbitration Fees:** In the event of a dispute, a nominal fee is taken from the escrowed amount to compensate the Arbitrator for their time resolving the issue.
+- **Premium Features:** Future scoping includes white-labeling the escrow API for other marketplaces, tiered merchant accounts, and integrations with stablecoin yield generation while funds are locked.
+
 ## 🛠️ Tech Stack Overview
 - **Frontend & Backend:** Next.js 16 (App Router), React 19, TypeScript
 - **Styling:** Tailwind CSS, Framer Motion, Lucide Icons
 - **Database & Auth:** Supabase (PostgreSQL)
 - **Blockchain Interface:** `@stellar/stellar-sdk`, `@stellar/freighter-api`
 - **Smart Contracts:** Rust, Soroban SDK (Compiled to `wasm32v1-none`)
+
+## 🌌 Why Stellar & Soroban?
+TradeVault specifically utilizes the Stellar network and Soroban (Stellar's smart contract platform) for several crucial reasons:
+- **Cost-Efficiency:** Escrow relies on locking and transferring value. Traditional blockchains have high gas fees that make micro-escrows impossible. Stellar’s fees are fractions of a cent.
+- **Speed:** Stellar boasts near-instant block finality (3-5 seconds). Users don't have to wait minutes for a transaction to clear before shipping goods or confirming receipt.
+- **First-Class Stablecoins:** Stellar treats USDC and other stable assets natively without complex token wrappers, making dollar-pegged transfers incredibly secure.
+- **Performance & Safety:** Soroban allows us to write safe, highly performant, and deeply auditable smart contracts using Rust.
 
 ---
 
@@ -42,21 +88,6 @@ TradeVault is a secure, trustless, decentralized escrow marketplace built on the
 | Arbitrator dashboard & granular percentage splits          | ✅ Live |
 | Immutable on-chain payment recording                       | ✅ Live |
 | Mobile-responsive UI                                       | ✅ Live |
-
----
-
-## 📊 Market Analysis: Traditional vs. Decentralized Escrow
-
-**Major Inefficiencies in the Traditional Escrow Market:**
-```mermaid
-pie
-    "High Middleman Fees (up to 5-10%)" : 45
-    "Slow Cross-Border Settlement" : 25
-    "Lack of Transparency" : 20
-    "High Fraud / Chargeback Rates" : 10
-```
-
-TradeVault directly addresses these pain points by utilizing Stellar's near-instant block finality and mathematically proven Soroban smart contracts, reducing middleman fees to near-zero while operating globally.
 
 ---
 
@@ -146,6 +177,30 @@ The TradeVault escrow system has been fully migrated to Stellar's Soroban archit
 
 ---
 
+## 📂 Project Structure
+
+```text
+tradevault/
+├── contract/                   # Rust smart contract source code
+│   └── smart_contracts/        # Soroban contract for escrow logic (fund, release, dispute)
+├── src/
+│   ├── app/                    # Next.js App Router UI pages and Backend API routes
+│   │   ├── arbitrator/         # Arbitrator dashboard & dispute management UI
+│   │   ├── deal/               # Deal creation and escrow management flows
+│   │   └── api/                # Backend routes for DB sync & resolving disputes
+│   ├── components/             # Reusable React components (UI, Forms, Modals)
+│   │   └── ui/                 # Pre-built UI elements like buttons & cards
+│   ├── lib/                    # Helper functions and core platform logic
+│   │   ├── stellar.ts          # Soroban RPC and Freighter wallet integration logic
+│   │   └── supabase/           # Database schema and client initialization
+│   └── middleware.ts           # Next.js auth & route protection logic
+├── supabase/                   # Supabase DB SQL schema, policies, and roles
+├── public/                     # Static assets (including the TradeVault logo)
+└── package.json                # Project dependencies and deployment scripts
+```
+
+---
+
 ## 💻 How to Start the Project Locally
 
 ### Prerequisites
@@ -157,7 +212,7 @@ The TradeVault escrow system has been fully migrated to Stellar's Soroban archit
 
 1. **Clone the repository:**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/thisisouvik/tradevault-stellar
    cd tradevault
    ```
 
