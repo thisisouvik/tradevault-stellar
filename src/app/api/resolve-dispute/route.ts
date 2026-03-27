@@ -60,9 +60,11 @@ export async function POST(request: NextRequest) {
     const contractId = deal.contract_address || deal.contract_app_id
     if (contractId) {
       try {
+        const buyerAmount = deal.amount_usdc * (buyerPct / 100)
+        const sellerAmount = deal.amount_usdc * (sellerPct / 100)
         await callContractMethod(
           'resolve_dispute',
-          [sellerPct, buyerPct],
+          [dealId, actorProfile.wallet_address, buyerAmount, sellerAmount],
           String(contractId)
         )
       } catch (err) {

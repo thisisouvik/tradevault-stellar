@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Wallet, Zap, AlertCircle, CheckCircle2, ExternalLink } from 'lucide-react'
 
 import { isAllowed, setAllowed, getAddress, signTransaction } from '@stellar/freighter-api'
-import { Horizon, Asset, TransactionBuilder, Operation, Networks } from '@stellar/stellar-sdk'
+import { Horizon, rpc, Address, nativeToScVal, xdr, TransactionBuilder, Operation, Networks, Contract, Asset } from '@stellar/stellar-sdk'
 
 interface FundEscrowProps {
   dealId: string
@@ -13,10 +13,11 @@ interface FundEscrowProps {
   appAddress: string
   amountUSDC: number
   buyerWallet: string
+  sellerWallet: string
   onSuccess: () => void
 }
 
-export function FundEscrow({ dealId, appId, appAddress, amountUSDC, buyerWallet, onSuccess }: FundEscrowProps) {
+export function FundEscrow({ dealId, appId, appAddress, amountUSDC, buyerWallet, sellerWallet, onSuccess }: FundEscrowProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [txId, setTxId] = useState('')
@@ -32,6 +33,7 @@ export function FundEscrow({ dealId, appId, appAddress, amountUSDC, buyerWallet,
       if (!address) throw new Error('Could not get Freighter address. Please unlock your wallet.')
       
       const server = new Horizon.Server("https://horizon-testnet.stellar.org")
+      const sorobanServer = new rpc.Server("https://soroban-testnet.stellar.org")
       const userAccount = await server.loadAccount(address)
 
       // Find USDC balance to correctly identify the testnet issuer 
@@ -40,20 +42,69 @@ export function FundEscrow({ dealId, appId, appAddress, amountUSDC, buyerWallet,
         throw new Error(`Insufficient USDC balance. You need ${amountUSDC} USDC. Use the Dev Faucet!`)
       }
 
-// We verify the buyer has the funds and sign a cryptographic proof on-chain.
-      // Since we don't have a Soroban smart contract currently deployed to hold funds natively,
-      // we do a 0-value transaction here to 'sign' the agreement and lock the state.
-      // The actual transfer to the seller will occur in ConfirmReceipt.tsx.
-      const txPayment = new TransactionBuilder(userAccount, {
-        fee: "10000",
+      const contractId = process.env.NEXT_PUBLIC_STELLAR_CONTRACT_ID || "CD7P7SINFDFSHLBOGEBFMAJWPZC4CULFASS4JQF22YJ3LQVNNJRWV2HP"
+      const usdcAsset = new Asset('USDC', usdcBalance.asset_issuer)
+      const tokenContractId = usdcAsset.contractId(Networks.TESTNET)
+      
+      const dealSymbol = dealId.replace(/-/g, '').substring(0, 32)
+      const amountStroops = Math.floor(amountUSDC * 10000000)
+
+      const initOp = Operation.invokeHostFunction({
+        func: xdr.HostFunction.hostFunctionTypeInvokeContract(
+          new xdr.InvokeContractArgs({
+            contractAddress: new Address(contractId).toScAddress(),
+            functionName: 'initialize',
+            args: [
+              nativeToScVal(dealSymbol, { type: 'symbol' }),
+              new Address(address).toScVal(),
+              new Address(sellerWallet || address).toScVal(),
+              new Address(address).toScVal(), // Temp Arbitrator
+              new Address(tokenContractId).toScVal(),
+              nativeToScVal(amountStroops, { type: 'i128' })
+            ]
+          })
+        ),
+        auth: []
+      })
+
+      const fundOp = Operation.invokeHostFunction({
+        func: xdr.HostFunction.hostFunctionTypeInvokeContract(
+          new xdr.InvokeContractArgs({
+            contractAddress: new Address(contractId).toScAddress(),
+            functionName: 'fund',
+            args: [
+              nativeToScVal(dealSymbol, { type: 'symbol' }),
+              new Address(address).toScVal()
+            ]
+          })
+        ),
+        auth: []
+      })
+
+      let txPayment = new TransactionBuilder(userAccount, {
+        fee: "100000",
         networkPassphrase: Networks.TESTNET,
       })
-        .addOperation(Operation.manageData({
-          name: "TradeVault_Lock",
-          value: dealId.substring(0, 64)
-        }))
+        .addOperation(initOp)
+        .addOperation(fundOp)
         .setTimeout(30)
         .build();
+
+      let sim = await sorobanServer.simulateTransaction(txPayment);
+      if (rpc.Api.isSimulationError(sim)) {
+          console.warn("Init+Fund sim failed, trying just Fund if already initialized", sim.error);
+          txPayment = new TransactionBuilder(userAccount, {
+            fee: "100000",
+            networkPassphrase: Networks.TESTNET,
+          }).addOperation(fundOp).setTimeout(30).build();
+          
+          sim = await sorobanServer.simulateTransaction(txPayment);
+          if (rpc.Api.isSimulationError(sim)) {
+              throw new Error("Simulation failed: " + sim.error);
+          }
+      }
+      
+      txPayment = rpc.assembleTransaction(txPayment, sim).build()
 
       const signedResponse = await signTransaction(txPayment.toXDR(), { 
         networkPassphrase: Networks.TESTNET
@@ -64,8 +115,21 @@ export function FundEscrow({ dealId, appId, appAddress, amountUSDC, buyerWallet,
 
       const signedTx = TransactionBuilder.fromXDR(finalXdr, Networks.TESTNET)
       
-      // Submit to Stellar
-      const submitted = await server.submitTransaction(signedTx as any)
+      const submitted = await sorobanServer.sendTransaction(signedTx)
+      if (submitted.status === "ERROR") {
+         throw new Error("Transaction rejected by Soroban network")
+      }
+      
+      // Polling for network confirmation
+      let statusResponse = await sorobanServer.getTransaction(submitted.hash)
+      while (statusResponse.status === rpc.Api.GetTransactionStatus.NOT_FOUND) {
+         await new Promise(r => setTimeout(r, 2000))
+         statusResponse = await sorobanServer.getTransaction(submitted.hash)
+      }
+      if (statusResponse.status === rpc.Api.GetTransactionStatus.FAILED) {
+          throw new Error('Transaction failed on-chain')
+      }
+
       const realTxHash = submitted.hash
 
       setTxId(realTxHash)

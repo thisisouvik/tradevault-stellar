@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react'
 import { isAllowed, setAllowed, getAddress, signTransaction } from '@stellar/freighter-api'
-import { Horizon, Asset, TransactionBuilder, Operation, Networks } from '@stellar/stellar-sdk'
+import { Horizon, rpc, Address, nativeToScVal, xdr, TransactionBuilder, Operation, Networks } from '@stellar/stellar-sdk'
 
 interface ConfirmReceiptProps {
   dealId: string
@@ -38,29 +38,41 @@ export function ConfirmReceipt({ dealId, appId, amountUSDC, buyerWallet, sellerW
         throw new Error('Seller wallet address is missing. Cannot release funds.')
       }
 
+      const sorobanServer = new rpc.Server("https://soroban-testnet.stellar.org")
       const server = new Horizon.Server("https://horizon-testnet.stellar.org")
       const userAccount = await server.loadAccount(address)
 
-      // Find USDC balance to correctly identify the testnet issuer
-      const usdcBalance = userAccount.balances.find((b: any) => b.asset_type !== 'native' && b.asset_code === 'USDC') as any
-      if (!usdcBalance || Number(usdcBalance.balance) < amountUSDC) {
-        throw new Error(`Insufficient USDC balance to release funds.`)
-      }
+      const contractId = process.env.NEXT_PUBLIC_STELLAR_CONTRACT_ID || "CD7P7SINFDFSHLBOGEBFMAJWPZC4CULFASS4JQF22YJ3LQVNNJRWV2HP"
+      const dealSymbol = dealId.replace(/-/g, '').substring(0, 32)
 
-      const usdcAsset = new Asset('USDC', usdcBalance.asset_issuer)
+      const releaseFundsOp = Operation.invokeHostFunction({
+        func: xdr.HostFunction.hostFunctionTypeInvokeContract(
+          new xdr.InvokeContractArgs({
+            contractAddress: new Address(contractId).toScAddress(),
+            functionName: 'release_funds',
+            args: [
+              nativeToScVal(dealSymbol, { type: 'symbol' }),
+              new Address(address).toScVal()
+            ]
+          })
+        ),
+        auth: []
+      })
 
-      // We explicitly transfer the funds to the Seller's Wallet directly from the smart contract/buyer
-      const txPayment = new TransactionBuilder(userAccount, {
-        fee: "10000",
+      let txPayment = new TransactionBuilder(userAccount, {
+        fee: "100000",
         networkPassphrase: Networks.TESTNET,
       })
-        .addOperation(Operation.payment({
-          destination: sellerWallet,
-          asset: usdcAsset,
-          amount: amountUSDC.toString(),
-        }))
+        .addOperation(releaseFundsOp)
         .setTimeout(30)
         .build();
+
+      const sim = await sorobanServer.simulateTransaction(txPayment);
+      if (rpc.Api.isSimulationError(sim)) {
+          throw new Error("Simulation failed: " + sim.error);
+      }
+      
+      txPayment = rpc.assembleTransaction(txPayment, sim).build()
 
       const signedResponse = await signTransaction(txPayment.toXDR(), {
         networkPassphrase: Networks.TESTNET
@@ -71,8 +83,21 @@ export function ConfirmReceipt({ dealId, appId, amountUSDC, buyerWallet, sellerW
 
       const signedTx = TransactionBuilder.fromXDR(finalXdr, Networks.TESTNET)
 
-      // Submit to Stellar
-      const submitted = await server.submitTransaction(signedTx as any)
+      const submitted = await sorobanServer.sendTransaction(signedTx)
+      if (submitted.status === "ERROR") {
+         throw new Error("Transaction rejected by Soroban network")
+      }
+      
+      // Polling for network confirmation
+      let statusResponse = await sorobanServer.getTransaction(submitted.hash)
+      while (statusResponse.status === rpc.Api.GetTransactionStatus.NOT_FOUND) {
+         await new Promise(r => setTimeout(r, 2000))
+         statusResponse = await sorobanServer.getTransaction(submitted.hash)
+      }
+      if (statusResponse.status === rpc.Api.GetTransactionStatus.FAILED) {
+          throw new Error('Transaction failed on-chain')
+      }
+
       const txHash = submitted.hash
       const status = 'COMPLETED'
       const chainNetwork = 'stellar'

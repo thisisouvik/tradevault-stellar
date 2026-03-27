@@ -137,6 +137,7 @@ export function DealDetailClient({
                 appAddress={deal.contract_address}
                 amountUSDC={deal.amount_usdc}
                 buyerWallet={deal.buyer_wallet}
+                sellerWallet={deal.seller_wallet}
                 onSuccess={refresh}
               />
             </div>

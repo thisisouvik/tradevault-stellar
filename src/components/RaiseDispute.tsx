@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { AlertTriangle, AlertCircle } from 'lucide-react'
+import { isAllowed, setAllowed, getAddress, signTransaction } from '@stellar/freighter-api'
+import { Horizon, rpc, Address, nativeToScVal, xdr, TransactionBuilder, Operation, Networks } from '@stellar/stellar-sdk'
 
 interface RaiseDisputeProps {
   dealId: string
@@ -11,7 +13,7 @@ interface RaiseDisputeProps {
   onSuccess: () => void
 }
 
-export function RaiseDispute({ dealId, appId, buyerWallet, onSuccess }: RaiseDisputeProps) {
+export function RaiseDispute({ dealId, appId, buyerWallet, onSuccess }: RaiseDisputeProps) {        
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [confirmed, setConfirmed] = useState(false)
@@ -23,20 +25,70 @@ export function RaiseDispute({ dealId, appId, buyerWallet, onSuccess }: RaiseDis
     setError('')
     setLoading(true)
     try {
-      const onchainRes = await fetch(`/api/deals/${dealId}/onchain`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'dispute' }),
+      if (!(await isAllowed())) await setAllowed()
+      const { address } = await getAddress()
+      if (!address) throw new Error('Could not get Freighter address. Please unlock your wallet.')  
+
+      const sorobanServer = new rpc.Server("https://soroban-testnet.stellar.org")
+      const server = new Horizon.Server("https://horizon-testnet.stellar.org")
+      const userAccount = await server.loadAccount(address)
+
+      const contractId = process.env.NEXT_PUBLIC_STELLAR_CONTRACT_ID || "CD7P7SINFDFSHLBOGEBFMAJWPZC4CULFASS4JQF22YJ3LQVNNJRWV2HP"
+      const dealSymbol = dealId.replace(/-/g, '').substring(0, 32)
+
+      const disputeOp = Operation.invokeHostFunction({
+        func: xdr.HostFunction.hostFunctionTypeInvokeContract(
+          new xdr.InvokeContractArgs({
+            contractAddress: new Address(contractId).toScAddress(),
+            functionName: 'raise_dispute',
+            args: [
+              nativeToScVal(dealSymbol, { type: 'symbol' }),
+              new Address(address).toScVal()
+            ]
+          })
+        ),
+        auth: []
       })
 
-      const onchainData = await onchainRes.json().catch(() => ({}))
-      if (!onchainRes.ok) {
-        throw new Error(onchainData?.error || 'Failed to execute dispute action on Stellar')
+      let txPayment = new TransactionBuilder(userAccount, {
+        fee: "100000",
+        networkPassphrase: Networks.TESTNET,
+      })
+        .addOperation(disputeOp)
+        .setTimeout(30)
+        .build();
+
+      const sim = await sorobanServer.simulateTransaction(txPayment);
+      if (rpc.Api.isSimulationError(sim)) {
+          throw new Error("Simulation failed: " + sim.error);
+      }
+      
+      txPayment = rpc.assembleTransaction(txPayment, sim).build()
+
+      const signedResponse = await signTransaction(txPayment.toXDR(), {
+        networkPassphrase: Networks.TESTNET
+      })
+
+      const finalXdr = typeof signedResponse === "string" ? signedResponse : (signedResponse as any).signedTxXdr || (signedResponse as any).signedTransaction   
+      if (!finalXdr) throw new Error("Signature failed or was cancelled")
+
+      const signedTx = TransactionBuilder.fromXDR(finalXdr, Networks.TESTNET)
+
+      const submitted = await sorobanServer.sendTransaction(signedTx)
+      if (submitted.status === "ERROR") throw new Error("Transaction rejected by network");
+      
+      let statusResponse = await sorobanServer.getTransaction(submitted.hash)
+      while (statusResponse.status === rpc.Api.GetTransactionStatus.NOT_FOUND) {
+         await new Promise(r => setTimeout(r, 2000))
+         statusResponse = await sorobanServer.getTransaction(submitted.hash)
+      }
+      if (statusResponse.status === rpc.Api.GetTransactionStatus.FAILED) {
+          throw new Error('Transaction failed on-chain')
       }
 
-      const txHash = String(onchainData.txHash || '')
-      const status = String(onchainData.status || 'DISPUTED')
-      const chainNetwork = String(onchainData.chainNetwork || 'stellar')
+      const txHash = submitted.hash
+      const status = 'DISPUTED'
+      const chainNetwork = 'stellar'
 
       const updateRes = await fetch(`/api/deals/${dealId}`, {
         method: 'PATCH',

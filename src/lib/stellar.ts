@@ -1,14 +1,8 @@
 import { createHash } from 'crypto'
+import { Horizon, rpc, Address, nativeToScVal, xdr, TransactionBuilder, Operation, Networks, Keypair, Contract } from '@stellar/stellar-sdk'
 
-export const STELLAR_RPC_URL = process.env.STELLAR_RPC_URL || ''
+export const STELLAR_RPC_URL = process.env.STELLAR_RPC_URL || 'https://soroban-testnet.stellar.org'
 export const STELLAR_CONTRACT_ID = process.env.STELLAR_CONTRACT_ID || ''
-
-interface RelayerInvokeResponse {
-  txHash?: string
-  txId?: string
-  hash?: string
-  error?: string
-}
 
 function getConfiguredContractId(contractId?: string): string {
   const resolved = contractId || STELLAR_CONTRACT_ID
@@ -22,98 +16,88 @@ function hasServerSigner(): boolean {
   return Boolean(process.env.STELLAR_PLATFORM_SECRET)
 }
 
-function getRelayerConfig() {
-  return {
-    url: process.env.STELLAR_RELAYER_URL || '',
-    token: process.env.STELLAR_RELAYER_TOKEN || '',
-  }
-}
-
-// Stable hash helper used for tracking/reason payloads.
 export async function sha256(text: string): Promise<string> {
   return createHash('sha256').update(text).digest('hex')
 }
 
-/**
- * Call a Soroban method through a relayer service.
- *
- * Why relayer: server-side Soroban tx simulation + assembly + signing is verbose and
- * depends on SDK/runtime setup. The relayer endpoint centralizes those steps so routes
- * only pass business-level method + args.
- */
 export async function callContractMethod(
   method: string,
-  args: unknown[] = [],
+  args: any[] = [],
   contractId?: string
 ): Promise<string> {
   const resolvedContractId = getConfiguredContractId(contractId)
-  const { url, token } = getRelayerConfig()
-
-  if (!url) {
-    if (process.env.NODE_ENV !== 'production') {
-      console.warn('STELLAR_RELAYER_URL missing. Returning mock transaction hash for development.')
-      return `mock_tx_${Date.now()}`
-    }
-    throw new Error('STELLAR_RELAYER_URL is not configured')
-  }
 
   if (!hasServerSigner()) {
     throw new Error('STELLAR_PLATFORM_SECRET is not configured')
   }
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify({
-      contractId: resolvedContractId,
-      method,
-      args,
-      networkPassphrase: process.env.STELLAR_NETWORK_PASSPHRASE,
-      rpcUrl: STELLAR_RPC_URL,
-      // Relayer should read its own secret from server env. This flag allows hard-fail if missing.
-      requirePlatformSigner: true,
-    }),
+  const platformKeypair = Keypair.fromSecret(process.env.STELLAR_PLATFORM_SECRET!)
+  const sorobanServer = new rpc.Server(STELLAR_RPC_URL)
+  const server = new Horizon.Server(process.env.STELLAR_HORIZON_URL || "https://horizon-testnet.stellar.org")
+  
+  const account = await server.loadAccount(platformKeypair.publicKey())
+
+  let xdrArgs: xdr.ScVal[] = []
+  if (method === 'resolve_dispute') {
+    const [dealId, arbitratorAddress, buyerAmount, sellerAmount] = args
+    const dealSymbol = dealId.replace(/-/g, '').substring(0, 32)
+    xdrArgs = [
+      nativeToScVal(dealSymbol, { type: 'symbol' }),
+      new Address(arbitratorAddress || platformKeypair.publicKey()).toScVal(),
+      nativeToScVal(Math.floor(buyerAmount * 10000000), { type: 'i128' }),
+      nativeToScVal(Math.floor(sellerAmount * 10000000), { type: 'i128' })
+    ]
+  }
+
+  const op = Operation.invokeHostFunction({
+    func: xdr.HostFunction.hostFunctionTypeInvokeContract(
+      new xdr.InvokeContractArgs({
+        contractAddress: new Address(resolvedContractId).toScAddress(),
+        functionName: method,
+        args: xdrArgs
+      })
+    ),
+    auth: []
   })
 
-  const data = (await response.json()) as RelayerInvokeResponse
+  let tx = new TransactionBuilder(account, {
+    fee: "100000",
+    networkPassphrase: Networks.TESTNET,
+  })
+    .addOperation(op)
+    .setTimeout(30)
+    .build()
 
-  if (!response.ok || data.error) {
-    throw new Error(data.error || `Relayer invoke failed for method: ${method}`)
+  const sim = await sorobanServer.simulateTransaction(tx)
+  if (rpc.Api.isSimulationError(sim)) {
+      throw new Error(`Simulation failed: ` + sim.error)
   }
 
-  const txHash = data.txHash || data.txId || data.hash
-  if (!txHash) {
-    throw new Error(`Relayer did not return a tx hash for method: ${method}`)
+  tx = rpc.assembleTransaction(tx, sim).build()
+  tx.sign(platformKeypair)
+
+  const submitted = await sorobanServer.sendTransaction(tx)
+  if (submitted.status === "ERROR") throw new Error("Transaction rejected by network");
+
+  let statusResponse = await sorobanServer.getTransaction(submitted.hash)
+  while (statusResponse.status === rpc.Api.GetTransactionStatus.NOT_FOUND) {
+     await new Promise(r => setTimeout(r, 2000))
+     statusResponse = await sorobanServer.getTransaction(submitted.hash)
+  }
+  if (statusResponse.status === rpc.Api.GetTransactionStatus.FAILED) {
+      throw new Error('Transaction failed on-chain')
   }
 
-  return txHash
+  return submitted.hash
 }
 
-/**
- * Lightweight health probe used by bootstrap endpoint.
- */
 export async function verifyStellarRuntime(): Promise<{ ok: boolean; message: string }> {
-  if (!STELLAR_RPC_URL) {
-    return { ok: false, message: 'STELLAR_RPC_URL is not set' }
-  }
-
-  if (!STELLAR_CONTRACT_ID) {
-    return { ok: false, message: 'STELLAR_CONTRACT_ID is not set' }
-  }
-
-  if (!process.env.STELLAR_PLATFORM_SECRET) {
-    return { ok: false, message: 'STELLAR_PLATFORM_SECRET is not set' }
-  }
-
+  if (!STELLAR_RPC_URL) return { ok: false, message: 'STELLAR_RPC_URL defaults used' }
+  if (!STELLAR_CONTRACT_ID) return { ok: false, message: 'STELLAR_CONTRACT_ID is not set' }
+  if (!process.env.STELLAR_PLATFORM_SECRET) return { ok: false, message: 'STELLAR_PLATFORM_SECRET is not set' }
   return { ok: true, message: 'Stellar runtime configured' }
 }
 
-/**
- * Optional reputation hook. Kept async and non-throwing to mirror previous flow.
- */
 export async function writeReputationNote(
   wallet: string,
   outcome: string,
@@ -122,7 +106,6 @@ export async function writeReputationNote(
 ): Promise<void> {
   const webhook = process.env.STELLAR_REPUTATION_WEBHOOK_URL
   if (!webhook) return
-
   try {
     await fetch(webhook, {
       method: 'POST',
