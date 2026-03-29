@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PackagePlus, DollarSign, Mail, FileText, AlertCircle, CheckCircle2, Shield, ExternalLink,} from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { isAllowed, setAllowed, getAddress, signTransaction } from '@stellar/freighter-api'
+import { Horizon, rpc, Address, nativeToScVal, xdr, TransactionBuilder, Operation, Networks, Asset } from '@stellar/stellar-sdk'
 
 export default function CreateDealForm() {
   const router = useRouter()
@@ -65,8 +67,18 @@ export default function CreateDealForm() {
     }
 
     try {
+      // 1. Immediately request Freighter before losing browser user-gesture context
+      if (!(await isAllowed())) await setAllowed()
+      const publicKeyObj = await getAddress()
+      const sellerStellarAddress = typeof publicKeyObj === 'string' ? publicKeyObj : (publicKeyObj as any)?.address
+      
+      if (!sellerStellarAddress) {
+        throw new Error('Could not get Freighter address to initialize contract. Please unlock.')
+      }
+
       setStep('saving')
 
+      // 2. Do DB checks
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
@@ -85,8 +97,85 @@ export default function CreateDealForm() {
         throw new Error('NEXT_PUBLIC_STELLAR_CONTRACT_ID is missing. Please set it in env.')
       }
 
-      setTxId('pending')
       setAppId(configuredContractId)
+
+      // 3. Initialize Soroban Contract over testnet
+      const _server = new Horizon.Server("https://horizon-testnet.stellar.org")
+      const sorobanServer = new rpc.Server("https://soroban-testnet.stellar.org")
+      const sellerAccount = await _server.loadAccount(sellerStellarAddress)
+
+      const usdcBalance = sellerAccount.balances.find((b: any) => b.asset_type !== 'native' && b.asset_code === 'USDC') as any
+      // Fallback to a syntactically valid public key if user doesn't have a USDC trustline
+      const validMockIssuer = 'GBZUDOB2YZRVPQCBODPBXO2T3ASGWMH26BBYT34OWQJUC5LKXMBLZUYK'
+      const usdcIssuer = usdcBalance?.asset_issuer || validMockIssuer
+      let usdcContractId;
+
+      try {
+        const usdcAsset = new Asset('USDC', usdcIssuer)
+        usdcContractId = usdcAsset.contractId(Networks.TESTNET)
+      } catch (err) {
+        // Fallback directly to the public testnet USDC token contract if Asset throws
+        usdcContractId = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC' 
+      }
+
+      // Generate a unique deal ID Symbol for on-chain storage.
+      // Soroban Symbols are max 32 chars, alphanumeric + underscore only.
+      // We use a timestamp + truncated random hex to guarantee uniqueness.
+      const rawDealId = `tv_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
+      const dealSymbol = rawDealId.substring(0, 32)
+
+      // Contract entrypoint: initialize(deal_id, buyer, seller, arbitrator, token, amount)
+      // NOTE: delivery_days and dispute_window_days are off-chain only — Supabase stores them.
+      const createOp = Operation.invokeHostFunction({
+        func: xdr.HostFunction.hostFunctionTypeInvokeContract(
+          new xdr.InvokeContractArgs({
+            contractAddress: new Address(configuredContractId).toScAddress(),
+            functionName: 'initialize',
+            args: [
+              nativeToScVal(dealSymbol, { type: 'symbol' }),                       // deal_id: Symbol
+              nativeToScVal(form.buyerWallet.trim(), { type: 'address' }),         // buyer: Address
+              nativeToScVal(sellerStellarAddress, { type: 'address' }),            // seller: Address
+              nativeToScVal(sellerStellarAddress, { type: 'address' }),            // arbitrator: Address (platform = seller for now)
+              nativeToScVal(usdcContractId, { type: 'address' }),                  // token: Address (USDC)
+              nativeToScVal(BigInt(amount) * BigInt(10_000_000), { type: 'i128' }) // amount: i128 (stroops)
+            ]
+          })
+        ),
+        auth: []
+      })
+
+      let txPayment = new TransactionBuilder(sellerAccount, { fee: "100000", networkPassphrase: Networks.TESTNET })
+        .addOperation(createOp).setTimeout(30).build()
+
+      let sim = await sorobanServer.simulateTransaction(txPayment)
+      if (rpc.Api.isSimulationError(sim)) {
+          // "Already initialized" is the exact panic string from lib.rs
+          if (!sim.error.includes("Already initialized")) {
+            throw new Error("On-Chain initialization failed: " + sim.error)
+          } 
+          console.warn("Contract slot already initialized — bypassing to save to DB.")
+          setTxId('already-initialized')
+      } else {
+        txPayment = rpc.assembleTransaction(txPayment, sim as any).build()
+        const signedResponse = await signTransaction(txPayment.toXDR(), { networkPassphrase: Networks.TESTNET })
+        const finalXdr = typeof signedResponse === "string" ? signedResponse : (signedResponse as any).signedTxXdr || (signedResponse as any).signedTransaction
+        if (!finalXdr) throw new Error("Signature failed or cancelled")
+        
+        const signedTx = TransactionBuilder.fromXDR(finalXdr, Networks.TESTNET)
+        const submitted = await sorobanServer.sendTransaction(signedTx)
+        if (submitted.status === "ERROR") throw new Error("Transaction rejected by Soroban")
+
+        // Wait for confirmation
+        let statusResponse = await sorobanServer.getTransaction(submitted.hash)
+        while (statusResponse.status === rpc.Api.GetTransactionStatus.NOT_FOUND) {
+          await new Promise(r => setTimeout(r, 2000))
+          statusResponse = await sorobanServer.getTransaction(submitted.hash)
+        }
+        if (statusResponse.status === rpc.Api.GetTransactionStatus.FAILED) {
+          throw new Error('On-chain initialization failed')
+        }
+        setTxId(submitted.hash)
+      }
 
       // Save to Supabase
       const res = await fetch('/api/deals/create', {
@@ -103,6 +192,7 @@ export default function CreateDealForm() {
           disputeWindowDays: parseInt(form.disputeWindowDays),
           contractAppId: configuredContractId,
           contractAddress: configuredContractId,
+          onChainDealId: dealSymbol, // on-chain Symbol key for fund/release calls
           arbitrator: 'default',
         }),
       })

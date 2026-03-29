@@ -25,24 +25,21 @@ export default async function DashboardPage() {
   if (role === 'seller') {
     const { data } = await supabase
       .from('deals')
-      .select('*')
-      .eq('seller_id', user.id)
-      .order('created_at', { ascending: false })
-    deals = data || []
-  } else if (role === 'buyer') {
-    const { data } = await supabase
-      .from('deals')
-      .select('*')
-      .or(`buyer_email.eq.${user.email},buyer_wallet.eq.${profile?.wallet_address || 'UNSET'}`)
-      .order('created_at', { ascending: false })
-    deals = data || []
-  } else if (role === 'arbitrator') {
-    const { data } = await supabase
-      .from('deals')
-      .select('*')
-      .in('status', ['DISPUTED'])
-      .order('created_at', { ascending: false })
-    deals = data || []
+        .select(`*, profiles:seller_id(id, name, email, wallet_address)`)
+        .eq('seller_id', user.id)
+        .order('created_at', { ascending: false })
+      deals = data || []
+    } else if (role === 'buyer') {
+      const { data } = await supabase
+        .from('deals')
+        .select(`*, profiles:seller_id(id, name, email, wallet_address)`)
+        .or(`buyer_email.eq.${user.email},buyer_wallet.eq.${profile?.wallet_address || 'UNSET'}`)
+        .order('created_at', { ascending: false })
+      deals = data || []
+    } else if (role === 'arbitrator') {
+      const { data } = await supabase
+        .from('deals')
+        .select(`*, profiles:seller_id(id, name, email, wallet_address)`)
   }
 
   return <DashboardClient user={user} profile={profile} deals={deals} />

@@ -26,7 +26,10 @@ export function RaiseDispute({ dealId, appId, buyerWallet, onSuccess }: RaiseDis
     setLoading(true)
     try {
       if (!(await isAllowed())) await setAllowed()
-      const { address } = await getAddress()
+      
+      const publicKeyObj = await getAddress()
+      const address = typeof publicKeyObj === 'string' ? publicKeyObj : (publicKeyObj as any).address        
+
       if (!address) throw new Error('Could not get Freighter address. Please unlock your wallet.')  
 
       const sorobanServer = new rpc.Server("https://soroban-testnet.stellar.org")
@@ -34,7 +37,9 @@ export function RaiseDispute({ dealId, appId, buyerWallet, onSuccess }: RaiseDis
       const userAccount = await server.loadAccount(address)
 
       const contractId = process.env.NEXT_PUBLIC_STELLAR_CONTRACT_ID || "CD7P7SINFDFSHLBOGEBFMAJWPZC4CULFASS4JQF22YJ3LQVNNJRWV2HP"
-      const dealSymbol = dealId.replace(/-/g, '').substring(0, 32)
+
+      // Create a hash of the dispute reason from the dealId and timestamp
+      const reasonHash = new TextEncoder().encode(dealId + Date.now().toString())
 
       const disputeOp = Operation.invokeHostFunction({
         func: xdr.HostFunction.hostFunctionTypeInvokeContract(
@@ -42,8 +47,7 @@ export function RaiseDispute({ dealId, appId, buyerWallet, onSuccess }: RaiseDis
             contractAddress: new Address(contractId).toScAddress(),
             functionName: 'raise_dispute',
             args: [
-              nativeToScVal(dealSymbol, { type: 'symbol' }),
-              new Address(address).toScVal()
+              nativeToScVal(reasonHash, { type: 'bytes' })
             ]
           })
         ),

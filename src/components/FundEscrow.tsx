@@ -29,7 +29,10 @@ export function FundEscrow({ dealId, appId, appAddress, amountUSDC, buyerWallet,
     setLoading(true)
     try {
       if (!(await isAllowed())) await setAllowed()
-      const { address } = await getAddress()
+      
+      const publicKeyObj = await getAddress()
+      const address = typeof publicKeyObj === 'string' ? publicKeyObj : (publicKeyObj as any).address        
+
       if (!address) throw new Error('Could not get Freighter address. Please unlock your wallet.')
       
       const server = new Horizon.Server("https://horizon-testnet.stellar.org")
@@ -43,39 +46,26 @@ export function FundEscrow({ dealId, appId, appAddress, amountUSDC, buyerWallet,
       }
 
       const contractId = process.env.NEXT_PUBLIC_STELLAR_CONTRACT_ID || "CD7P7SINFDFSHLBOGEBFMAJWPZC4CULFASS4JQF22YJ3LQVNNJRWV2HP"
-      const usdcAsset = new Asset('USDC', usdcBalance.asset_issuer)
-      const tokenContractId = usdcAsset.contractId(Networks.TESTNET)
       
-      const dealSymbol = dealId.replace(/-/g, '').substring(0, 32)
-      const amountStroops = Math.floor(amountUSDC * 10000000)
-
-      const initOp = Operation.invokeHostFunction({
+      // Buyer calls accept_deal() to accept the seller's proposed deal
+      const acceptOp = Operation.invokeHostFunction({
         func: xdr.HostFunction.hostFunctionTypeInvokeContract(
           new xdr.InvokeContractArgs({
             contractAddress: new Address(contractId).toScAddress(),
-            functionName: 'initialize',
-            args: [
-              nativeToScVal(dealSymbol, { type: 'symbol' }),
-              new Address(address).toScVal(),
-              new Address(sellerWallet || address).toScVal(),
-              new Address(address).toScVal(), // Temp Arbitrator
-              new Address(tokenContractId).toScVal(),
-              nativeToScVal(amountStroops, { type: 'i128' })
-            ]
+            functionName: 'accept_deal',
+            args: []
           })
         ),
         auth: []
       })
 
+      // Buyer calls fund_deal() to lock USDC into the smart contract
       const fundOp = Operation.invokeHostFunction({
         func: xdr.HostFunction.hostFunctionTypeInvokeContract(
           new xdr.InvokeContractArgs({
             contractAddress: new Address(contractId).toScAddress(),
-            functionName: 'fund',
-            args: [
-              nativeToScVal(dealSymbol, { type: 'symbol' }),
-              new Address(address).toScVal()
-            ]
+            functionName: 'fund_deal',
+            args: []
           })
         ),
         auth: []
@@ -85,14 +75,14 @@ export function FundEscrow({ dealId, appId, appAddress, amountUSDC, buyerWallet,
         fee: "100000",
         networkPassphrase: Networks.TESTNET,
       })
-        .addOperation(initOp)
+        .addOperation(acceptOp)
         .addOperation(fundOp)
         .setTimeout(30)
         .build();
 
       let sim = await sorobanServer.simulateTransaction(txPayment);
       if (rpc.Api.isSimulationError(sim)) {
-          console.warn("Init+Fund sim failed, trying just Fund if already initialized", sim.error);
+          console.warn("Accept+Fund sim failed, trying just Fund if already accepted", sim.error);
           txPayment = new TransactionBuilder(userAccount, {
             fee: "100000",
             networkPassphrase: Networks.TESTNET,

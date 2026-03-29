@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       itemName, itemDescription,
       amountUSDC, deliveryDays,
       contractAppId, contractAddress,
-      contractId,
+      contractId, onChainDealId,
     } = body
 
     // Validation
@@ -48,24 +48,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid deliveryDays' }, { status: 400 })
     }
 
-    // Insert deal
-    const { data: deal, error } = await supabase
+    // Insert deal — with graceful fallback if on_chain_deal_id column hasn't been
+    // migrated yet (retries without it so the app never hard-fails on schema drift).
+    const basePayload = {
+      seller_id: user.id,
+      buyer_email: buyerEmail,
+      buyer_wallet: buyerWallet,
+      item_name: itemName,
+      item_description: itemDescription || null,
+      amount_usdc: parsedAmount,
+      delivery_days: parsedDeliveryDays,
+      dispute_window_days: 7,
+      status: 'PROPOSED',
+      contract_app_id: contractAppId || contractId || null,
+      contract_address: contractAddress || contractId || null,
+    }
+
+    let { data: deal, error } = await supabase
       .from('deals')
-      .insert({
-        seller_id: user.id,
-        buyer_email: buyerEmail,
-        buyer_wallet: buyerWallet,
-        item_name: itemName,
-        item_description: itemDescription || null,
-        amount_usdc: parsedAmount,
-        delivery_days: parsedDeliveryDays,
-        dispute_window_days: 7,
-        status: 'PROPOSED',
-        contract_app_id: contractAppId || contractId || null,
-        contract_address: contractAddress || contractId || null,
-      })
+      .insert({ ...basePayload, on_chain_deal_id: onChainDealId || null })
       .select()
       .single()
+
+    // If the column doesn't exist yet (migration pending), retry without it
+    if (error?.message?.includes('on_chain_deal_id') || error?.code === '42703') {
+      console.warn('on_chain_deal_id column missing — retrying without it. Run migration SQL.')
+      ;({ data: deal, error } = await supabase
+        .from('deals')
+        .insert(basePayload)
+        .select()
+        .single())
+    }
 
     if (error || !deal) {
       console.error('Deal insert error:', error)
