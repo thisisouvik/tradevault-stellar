@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail, emailTemplates } from '@/lib/email'
-
-const STELLAR_TXHASH_REGEX = /^[a-fA-F0-9]{64}$/
+import { canTransitionDealStatus, isSupportedPatchStatus, isValidStellarTxHash } from '@/lib/dealLifecycle'
 
 type ChainNetwork = 'stellar'
 
@@ -12,10 +11,6 @@ function resolveDealChain(deal: { contract_address?: string | null; contract_app
     throw new Error('Deal is not configured for Stellar contract execution')
   }
   return 'stellar'
-}
-
-function isValidTxHash(network: ChainNetwork, txHash: string): boolean {
-  return STELLAR_TXHASH_REGEX.test(txHash)
 }
 
 async function txExistsOnChain(_network: ChainNetwork, txHash: string): Promise<boolean> {
@@ -87,8 +82,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   const body = await request.json()
   const { status, txHash, chainNetwork } = body
 
-  const allowedStatuses = new Set(['FUNDED', 'COMPLETED', 'DISPUTED', 'CANCELLED'])
-  if (!status || !allowedStatuses.has(status)) {
+  if (!status || !isSupportedPatchStatus(status)) {
     return NextResponse.json({ error: 'Invalid or unsupported status update' }, { status: 400 })
   }
 
@@ -139,7 +133,7 @@ if (status !== 'CANCELLED') {
     }
 
     const normalizedTxHash = txHash.trim()
-    if (!isValidTxHash(expectedNetwork, normalizedTxHash) && !normalizedTxHash.startsWith("mock_tx_")) {
+    if (!isValidStellarTxHash(normalizedTxHash) && !normalizedTxHash.startsWith("mock_tx_")) {
       return NextResponse.json({ error: `Invalid ${expectedNetwork} tx hash format` }, { status: 400 })
     }
 
@@ -167,17 +161,16 @@ if (status !== 'CANCELLED') {
     )
   }
 
-  if (status === 'CANCELLED' && existingDeal.status !== 'PROPOSED') {
-    return NextResponse.json({ error: 'Only PROPOSED deals can be cancelled' }, { status: 400 })
-  }
-
-  if (status === 'FUNDED' && existingDeal.status !== 'PROPOSED' && existingDeal.status !== 'ACCEPTED') {
-    return NextResponse.json({ error: 'Invalid state transition to FUNDED' }, { status: 400 })
-  }
-  if (status === 'COMPLETED' && existingDeal.status !== 'DELIVERED') {
-    return NextResponse.json({ error: 'Deal must be DELIVERED before completion' }, { status: 400 })
-  }
-  if (status === 'DISPUTED' && existingDeal.status !== 'DELIVERED') {
+  if (!canTransitionDealStatus(existingDeal.status, status)) {
+    if (status === 'CANCELLED') {
+      return NextResponse.json({ error: 'Only PROPOSED deals can be cancelled' }, { status: 400 })
+    }
+    if (status === 'FUNDED') {
+      return NextResponse.json({ error: 'Invalid state transition to FUNDED' }, { status: 400 })
+    }
+    if (status === 'COMPLETED') {
+      return NextResponse.json({ error: 'Deal must be DELIVERED before completion' }, { status: 400 })
+    }
     return NextResponse.json({ error: 'Deal must be DELIVERED before dispute' }, { status: 400 })
   }
 

@@ -39,18 +39,23 @@ export async function POST(request: NextRequest) {
     const trackingHash = await sha256(trackingId)
 
     // Step 3: Call submit_delivery() on Stellar Soroban contract (server signer / relayer)
-    let txId: string | undefined
     const contractId = deal.contract_address || deal.contract_app_id
-    if (contractId) {
-      try {
-        txId = await callContractMethod(
-          'submit_delivery',
-          [trackingHash],
-          String(contractId)
-        )
-      } catch (err) {
-        console.warn('Failed to call Stellar contract (continuing):', err)
-      }
+    if (!contractId) {
+      return NextResponse.json({ error: 'Missing contract identifier for deal' }, { status: 400 })
+    }
+
+    let txId: string
+    try {
+      txId = await callContractMethod(
+        'submit_delivery',
+        [trackingHash],
+        String(contractId)
+      )
+    } catch (err: any) {
+      return NextResponse.json(
+        { error: err?.message || 'On-chain submit_delivery failed' },
+        { status: 502 }
+      )
     }
 
     // Step 4: Update DB

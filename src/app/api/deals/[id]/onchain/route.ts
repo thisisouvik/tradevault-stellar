@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { callContractMethod, sha256 } from '@/lib/stellar'
+import { resolveOnchainAction } from '@/lib/dealLifecycle'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -37,32 +38,27 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Missing contract identifier for deal' }, { status: 400 })
     }
 
-    let method = ''
-    let args: unknown[] = []
-    let status = ''
-
-    if (action === 'fund') {
-      if (deal.status !== 'PROPOSED' && deal.status !== 'ACCEPTED') {
+    const resolvedAction = resolveOnchainAction(action, deal.status)
+    if (!resolvedAction) {
+      if (action === 'fund') {
         return NextResponse.json({ error: 'Deal must be PROPOSED or ACCEPTED to fund' }, { status: 400 })
       }
-      method = 'fund_deal'
-      status = 'FUNDED'
-    } else if (action === 'confirm') {
-      if (deal.status !== 'DELIVERED') {
+      if (action === 'confirm') {
         return NextResponse.json({ error: 'Deal must be DELIVERED before confirmation' }, { status: 400 })
       }
-      method = 'confirm_package'
-      status = 'COMPLETED'
-    } else if (action === 'dispute') {
-      if (deal.status !== 'DELIVERED') {
+      if (action === 'dispute') {
         return NextResponse.json({ error: 'Deal must be DELIVERED before dispute' }, { status: 400 })
       }
-      const reasonHash = await sha256(`dispute:${deal.id}:${user.id}:${Date.now()}`)
-      method = 'raise_dispute'
-      args = [reasonHash]
-      status = 'DISPUTED'
-    } else {
       return NextResponse.json({ error: 'Unsupported action' }, { status: 400 })
+    }
+
+    const method = resolvedAction.method
+    const status = resolvedAction.nextStatus
+    let args: unknown[] = []
+
+    if (action === 'dispute') {
+      const reasonHash = await sha256(`dispute:${deal.id}:${user.id}:${Date.now()}`)
+      args = [reasonHash]
     }
 
     const txHash = await callContractMethod(method, args, String(contractId))

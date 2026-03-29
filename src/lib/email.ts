@@ -30,8 +30,7 @@ export async function sendEmail(payload: EmailPayload): Promise<void> {
       }),
     })
     if (!res.ok) {
-      const err = await res.json()
-      console.error('Email send error:', err)
+      // Email delivery failed silently - can be logged to monitoring service in production
     }
   }
 }

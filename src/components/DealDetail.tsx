@@ -133,10 +133,7 @@ export function DealDetailClient({
             <div className="relative z-10">
               <FundEscrow
                 dealId={deal.id}
-                appId={appId}
-                appAddress={deal.contract_address}
                 amountUSDC={deal.amount_usdc}
-                buyerWallet={deal.buyer_wallet}
                 sellerWallet={deal.seller_wallet}
                 onSuccess={refresh}
               />
@@ -215,16 +212,12 @@ export function DealDetailClient({
                 <div className="space-y-4">
                   <ConfirmReceipt
                     dealId={deal.id}
-                    appId={appId}
                     amountUSDC={deal.amount_usdc}
-                    buyerWallet={deal.buyer_wallet}
                     sellerWallet={deal.seller_wallet}
                     onSuccess={refresh}
                   />
                   <RaiseDispute
                     dealId={deal.id}
-                    appId={appId}
-                    buyerWallet={deal.buyer_wallet}
                     onSuccess={refresh}
                   />
                 </div>

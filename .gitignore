@@ -32,6 +32,7 @@ yarn-error.log*
 # Rust / Cargo / Soroban Contract Build
 # ==========================================
 contract/target/
+contract/legacy/**/target/
 contract/Cargo.lock
 **/*.rlib
 **/*.so
@@ -122,3 +123,6 @@ next-env.d.ts
 logs/
 *.log
 **/target/
+
+# Documentation
+docs/
