@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Search, Menu, X, User, LogOut, LayoutDashboard } from 'lucide-react';
+import { Menu, X, User, LogOut, LayoutDashboard } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import toast from 'react-hot-toast';
 
@@ -10,7 +10,6 @@ const menuItems = [
   { label: "How it works", href: "/#how-it-works" },
   { label: "About", href: "/about" },
   { label: "Why Stellar?", href: "/why-stellar" },
-  { label: "Deployment Status", href: "/status" },
 ];
 
 function HoverGradientNavBar() {
@@ -83,19 +82,8 @@ function HoverGradientNavBar() {
           ))}
         </nav>
 
-        {/* Search + Auth Actions (Desktop) */}
+        {/* Auth Actions (Desktop) */}
         <div className="hidden md:flex items-center gap-5">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-[#189AB4]" />
-            </div>
-            <input
-              type="text"
-              placeholder="Search..."
-              className="pl-10 pr-4 py-2 w-44 lg:w-52 rounded-full bg-white/80 border border-[#189AB4]/20 text-sm text-[#05445E] placeholder:text-[#189AB4]/50 focus:outline-none focus:ring-2 focus:ring-[#189AB4]/40 shadow-sm font-medium transition-all"
-            />
-          </div>
-          
           {user ? (
             <div className="relative">
               <button 
@@ -189,16 +177,6 @@ function HoverGradientNavBar() {
             )}
           </nav>
           
-          <div className="relative w-full">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-[#189AB4]" />
-            </div>
-            <input
-              type="text"
-              placeholder="Search features, tools..."
-              className="pl-12 pr-4 py-3.5 w-full rounded-xl bg-slate-50 border border-[#189AB4]/20 text-base text-[#05445E] placeholder:text-[#189AB4]/50 focus:outline-none focus:ring-2 focus:ring-[#189AB4]/40"
-            />
-          </div>
         </div>
       </div>
 
