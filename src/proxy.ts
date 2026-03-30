@@ -60,22 +60,18 @@ export async function proxy(request: NextRequest) {
     const role = profile?.role
     const walletAddress = profile?.wallet_address
 
-    // Only sellers can create deals
     if (pathname.startsWith('/deal/new') && role !== 'seller') {
       const url = request.nextUrl.clone()
       url.pathname = '/dashboard'
       return NextResponse.redirect(url)
     }
 
-    // Only arbitrators can access /arbitrator/*
     if (pathname.startsWith('/arbitrator') && role !== 'arbitrator') {
       const url = request.nextUrl.clone()
       url.pathname = '/dashboard'
       return NextResponse.redirect(url)
     }
 
-    // Arbitrator wallet must be registered before opening queue/case details.
-    // Keep /arbitrator/profile accessible so wallet can be configured there.
     if (
       pathname.startsWith('/arbitrator') &&
       !pathname.startsWith('/arbitrator/profile') &&
