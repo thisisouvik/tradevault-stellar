@@ -50,6 +50,7 @@ CREATE TABLE public.deals (
   status              deal_status DEFAULT 'PROPOSED',
   contract_app_id     TEXT,
   contract_address    TEXT,
+  on_chain_deal_id    TEXT,          -- Soroban Symbol key (e.g. "tv_abc_xyz") used in fund/release calls
   tracking_id         TEXT,
   courier             TEXT,
   tracking_hash       TEXT,

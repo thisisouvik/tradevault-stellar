@@ -25,7 +25,10 @@ export function FundEscrow({ dealId, amountUSDC, sellerWallet, onSuccess }: Fund
     setLoading(true)
     try {
       if (!(await isAllowed())) await setAllowed()
-      const { address } = await getAddress()
+      
+      const publicKeyObj = await getAddress()
+      const address = typeof publicKeyObj === 'string' ? publicKeyObj : (publicKeyObj as any).address        
+
       if (!address) throw new Error('Could not get Freighter address. Please unlock your wallet.')
       
       const server = new Horizon.Server(process.env.NEXT_PUBLIC_STELLAR_HORIZON_URL || "https://horizon-testnet.stellar.org")
@@ -53,6 +56,7 @@ export function FundEscrow({ dealId, amountUSDC, sellerWallet, onSuccess }: Fund
         auth: []
       })
 
+      // Buyer calls fund_deal() to lock USDC into the smart contract
       const fundOp = Operation.invokeHostFunction({
         func: xdr.HostFunction.hostFunctionTypeInvokeContract(
           new xdr.InvokeContractArgs({

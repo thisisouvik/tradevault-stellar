@@ -397,7 +397,7 @@ export default function DashboardClient({ user, profile, deals }: DashboardClien
                                   </div>
                                   <div className="text-xs text-gray-500 flex items-center gap-1">
                                     <User className="w-3 h-3" />
-                                    {role === 'buyer' ? 'Seller Account' : (deal.buyer_email || `${deal.buyer_wallet.slice(0, 8)}...`)}
+                                      {role === 'buyer' ? (deal.profiles?.name || deal.profiles?.email || 'Seller') : (deal.buyer_email || `${deal.buyer_wallet.slice(0, 8)}...`)}
                                   </div>
                                 </Link>
                               </td>
