@@ -22,13 +22,23 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     const { data: deal } = await supabase
       .from('deals')
-      .select('id, seller_id, buyer_email, status, contract_address, contract_app_id')
+      .select('id, seller_id, buyer_email, buyer_wallet, status, contract_address, contract_app_id')
       .eq('id', id)
       .single()
 
     if (!deal) return NextResponse.json({ error: 'Deal not found' }, { status: 404 })
 
-    const isBuyer = Boolean(user.email && deal.buyer_email && user.email === deal.buyer_email)
+    const { data: actorProfile } = await supabase
+      .from('profiles')
+      .select('wallet_address')
+      .eq('id', user.id)
+      .single()
+
+    const isBuyer = Boolean(
+      actorProfile?.wallet_address &&
+      deal.buyer_wallet &&
+      actorProfile.wallet_address.trim().toUpperCase() === deal.buyer_wallet.trim().toUpperCase()
+    )
     if (!isBuyer) {
       return NextResponse.json({ error: 'Only buyer can execute this action' }, { status: 403 })
     }

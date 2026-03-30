@@ -29,12 +29,15 @@ export const metadata: Metadata = {
 
 import { Providers } from '@/components/Providers'
 import { Toaster } from 'react-hot-toast'
+import { assertProductionEnv } from '@/lib/env'
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  assertProductionEnv()
+
   return (
     <html lang="en" className={`${dmSans.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans bg-[#F0F2F5] text-[#6B7280]">

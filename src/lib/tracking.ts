@@ -3,6 +3,8 @@
  * Free tier: 1700+ carriers
  */
 
+import { fetchWithRetry } from '@/lib/retry'
+
 const TRACKINGMORE_BASE = 'https://api.trackingmore.com/v4'
 
 interface TrackingCheckpoint {
@@ -32,14 +34,14 @@ export async function verifyTrackingNumber(
   }
 
   try {
-    const res = await fetch(`${TRACKINGMORE_BASE}/trackings/detect`, {
+    const res = await fetchWithRetry(`${TRACKINGMORE_BASE}/trackings/detect`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Tracking-Api-Key': apiKey,
       },
       body: JSON.stringify({ tracking_number: trackingNumber }),
-    })
+    }, { retries: 2, baseDelayMs: 300 })
 
     const data = await res.json()
     if (data.code === 200 && data.data) {
@@ -77,14 +79,15 @@ export async function getTrackingStatus(
   }
 
   try {
-    const res = await fetch(
+    const res = await fetchWithRetry(
       `${TRACKINGMORE_BASE}/trackings/${carrierCode}/${trackingNumber}`,
       {
         headers: {
           'Tracking-Api-Key': apiKey,
         },
         next: { revalidate: 7200 }, // Cache for 2 hours
-      }
+      },
+      { retries: 2, baseDelayMs: 300 }
     )
 
     const data = await res.json()

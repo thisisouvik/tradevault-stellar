@@ -3,6 +3,9 @@
  * Falls back to console.log in development
  */
 
+import { fetchWithRetry } from '@/lib/retry'
+import { logServerError } from '@/lib/telemetry'
+
 interface EmailPayload {
   to: string
   subject: string
@@ -16,21 +19,32 @@ export async function sendEmail(payload: EmailPayload): Promise<void> {
   }
 
   if (process.env.RESEND_API_KEY) {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: process.env.RESEND_FROM || 'TradeVault <noreply@TradeVault.app>',
+    try {
+      const res = await fetchWithRetry('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          from: process.env.RESEND_FROM || 'TradeVault <noreply@TradeVault.app>',
+          to: payload.to,
+          subject: payload.subject,
+          html: payload.html,
+        }),
+      }, { retries: 2, baseDelayMs: 300 })
+
+      if (!res.ok) {
+        logServerError('email.send.failed', new Error(`Email status ${res.status}`), {
+          to: payload.to,
+          subject: payload.subject,
+        })
+      }
+    } catch (error) {
+      logServerError('email.send.exception', error, {
         to: payload.to,
         subject: payload.subject,
-        html: payload.html,
-      }),
-    })
-    if (!res.ok) {
-      // Email delivery failed silently - can be logged to monitoring service in production
+      })
     }
   }
 }

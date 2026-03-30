@@ -1,5 +1,8 @@
 import { createHash } from 'crypto'
 import { Horizon, rpc, Address, nativeToScVal, xdr, TransactionBuilder, Operation, Networks, Keypair } from '@stellar/stellar-sdk'
+import { validateEnv, SERVER_ENV } from '@/lib/env'
+import { withRetry, fetchWithRetry } from '@/lib/retry'
+import { logServerError } from '@/lib/telemetry'
 
 export const STELLAR_RPC_URL = process.env.STELLAR_RPC_URL || 'https://soroban-testnet.stellar.org'
 export const STELLAR_CONTRACT_ID = process.env.STELLAR_CONTRACT_ID || ''
@@ -35,7 +38,10 @@ export async function callContractMethod(
   const sorobanServer = new rpc.Server(STELLAR_RPC_URL)
   const server = new Horizon.Server(process.env.STELLAR_HORIZON_URL || "https://horizon-testnet.stellar.org")
   
-  const account = await server.loadAccount(platformKeypair.publicKey())
+  const account = await withRetry(
+    () => server.loadAccount(platformKeypair.publicKey()),
+    { retries: 3, baseDelayMs: 300 }
+  )
 
   let xdrArgs: xdr.ScVal[] = []
 
@@ -74,7 +80,10 @@ export async function callContractMethod(
     .setTimeout(30)
     .build()
 
-  const sim = await sorobanServer.simulateTransaction(tx)
+  const sim = await withRetry(
+    () => sorobanServer.simulateTransaction(tx),
+    { retries: 2, baseDelayMs: 400 }
+  )
   if (rpc.Api.isSimulationError(sim)) {
       throw new Error(`Simulation failed: ` + sim.error)
   }
@@ -82,13 +91,22 @@ export async function callContractMethod(
   tx = rpc.assembleTransaction(tx, sim).build()
   tx.sign(platformKeypair)
 
-  const submitted = await sorobanServer.sendTransaction(tx)
+  const submitted = await withRetry(
+    () => sorobanServer.sendTransaction(tx),
+    { retries: 2, baseDelayMs: 400 }
+  )
   if (submitted.status === "ERROR") throw new Error("Transaction rejected by network");
 
-  let statusResponse = await sorobanServer.getTransaction(submitted.hash)
+  let statusResponse = await withRetry(
+    () => sorobanServer.getTransaction(submitted.hash),
+    { retries: 2, baseDelayMs: 300 }
+  )
   while (statusResponse.status === rpc.Api.GetTransactionStatus.NOT_FOUND) {
      await new Promise(r => setTimeout(r, 2000))
-     statusResponse = await sorobanServer.getTransaction(submitted.hash)
+     statusResponse = await withRetry(
+      () => sorobanServer.getTransaction(submitted.hash),
+      { retries: 2, baseDelayMs: 300 }
+    )
   }
   if (statusResponse.status === rpc.Api.GetTransactionStatus.FAILED) {
       throw new Error('Transaction failed on-chain')
@@ -98,9 +116,10 @@ export async function callContractMethod(
 }
 
 export async function verifyStellarRuntime(): Promise<{ ok: boolean; message: string }> {
-  if (!STELLAR_RPC_URL) return { ok: false, message: 'STELLAR_RPC_URL defaults used' }
-  if (!STELLAR_CONTRACT_ID) return { ok: false, message: 'STELLAR_CONTRACT_ID is not set' }
-  if (!process.env.STELLAR_PLATFORM_SECRET) return { ok: false, message: 'STELLAR_PLATFORM_SECRET is not set' }
+  const env = validateEnv(SERVER_ENV)
+  if (!env.ok) {
+    return { ok: false, message: `Missing env: ${env.missingRequired.join(', ')}` }
+  }
   return { ok: true, message: 'Stellar runtime configured' }
 }
 
@@ -113,12 +132,13 @@ export async function writeReputationNote(
   const webhook = process.env.STELLAR_REPUTATION_WEBHOOK_URL
   if (!webhook) return
   try {
-    await fetch(webhook, {
+    await fetchWithRetry(webhook, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ wallet, outcome, value, dealId, ts: Math.floor(Date.now() / 1000) }),
-    })
-  } catch {
+    }, { retries: 2, baseDelayMs: 300 })
+  } catch (error) {
     // Silently fail if webhook is unreachable
+    logServerError('stellar.reputation_note.failed', error, { dealId, wallet })
   }
 }

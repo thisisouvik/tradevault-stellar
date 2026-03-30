@@ -3,7 +3,7 @@
 use soroban_sdk::{contract, contractimpl, contracttype, token, Address, Bytes, Env, Symbol};
 
 #[contracttype]
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Debug, Copy, Eq, PartialEq)]
 pub enum DealState {
     Proposed,
     Accepted,
@@ -224,5 +224,64 @@ fn get_required<T: soroban_sdk::TryFromVal<Env, soroban_sdk::Val>>(env: &Env, ke
     match env.storage().instance().get::<DataKey, T>(&key) {
         Some(v) => v,
         None => panic!("missing key"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use soroban_sdk::testutils::Address as _;
+    use soroban_sdk::{Address, Env};
+
+    fn setup_addresses(env: &Env) -> (Address, Address, Address, Address) {
+        (
+            Address::generate(env),
+            Address::generate(env),
+            Address::generate(env),
+            Address::generate(env),
+        )
+    }
+
+    #[test]
+    fn create_deal_sets_state_to_proposed() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let contract_id = env.register(TradeVaultEscrow, ());
+        let client = TradeVaultEscrowClient::new(&env, &contract_id);
+
+        let (seller, buyer, arbitrator, token) = setup_addresses(&env);
+
+        client.create_deal(&seller, &buyer, &arbitrator, &token, &100, &7, &7);
+
+        let state = client.get_state();
+        assert_eq!(state, DealState::Proposed);
+    }
+
+    #[test]
+    #[should_panic]
+    fn create_deal_rejects_zero_amount() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let contract_id = env.register(TradeVaultEscrow, ());
+        let client = TradeVaultEscrowClient::new(&env, &contract_id);
+
+        let (seller, buyer, arbitrator, token) = setup_addresses(&env);
+
+        client.create_deal(&seller, &buyer, &arbitrator, &token, &0, &7, &7);
+    }
+
+    #[test]
+    #[should_panic]
+    fn create_deal_rejects_reinitialization() {
+        let env = Env::default();
+        env.mock_all_auths();
+        let contract_id = env.register(TradeVaultEscrow, ());
+        let client = TradeVaultEscrowClient::new(&env, &contract_id);
+
+        let (seller, buyer, arbitrator, token) = setup_addresses(&env);
+
+        client.create_deal(&seller, &buyer, &arbitrator, &token, &100, &7, &7);
+
+        client.create_deal(&seller, &buyer, &arbitrator, &token, &200, &10, &7);
     }
 }

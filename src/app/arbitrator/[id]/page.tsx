@@ -45,6 +45,9 @@ export default async function ArbitratorPage({ params }: PageProps) {
     .single()
 
   if (!deal) notFound()
+  if (!deal.arbitrator_wallet || deal.arbitrator_wallet !== profile.wallet_address) {
+    redirect('/arbitrator')
+  }
 
   // Deal must be either DISPUTED or RESOLVED to be reviewed here
   if (deal.status !== 'DISPUTED' && deal.status !== 'RESOLVED') {
