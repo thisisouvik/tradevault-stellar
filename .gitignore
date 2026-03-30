@@ -33,7 +33,6 @@ yarn-error.log*
 # ==========================================
 contract/target/
 contract/legacy/**/target/
-contract/Cargo.lock
 **/*.rlib
 **/*.so
 **/*.dylib

@@ -9,6 +9,12 @@ on:
 jobs:
   web:
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci_dummy_anon_key
+      SUPABASE_SERVICE_ROLE_KEY: ci_dummy_service_role_key
+      STELLAR_PLATFORM_SECRET: ci_dummy_platform_secret
+      STELLAR_CONTRACT_ID: CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
     steps:
       - name: Checkout
         uses: actions/checkout@v4
