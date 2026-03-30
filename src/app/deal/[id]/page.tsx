@@ -73,15 +73,10 @@ export default async function DealPage({ params }: PageProps) {
     : { data: null }
 
   const dealLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/deal/${id}`
-  const seller = deal.profiles as { name: string; wallet_address?: string }
+  const seller = deal.profiles as { name: string; email: string; wallet_address?: string }
 
-  // Explicitly fetch seller's wallet address — separate query is more reliable than join typing
-  const { data: sellerProfile } = await supabase
-    .from('profiles')
-    .select('wallet_address')
-    .eq('id', deal.seller_id)
-    .single()
-  const sellerWallet = sellerProfile?.wallet_address || ''
+  // Use the nested profile relationship data directly instead of performing a secondary query
+  const sellerWallet = seller?.wallet_address || ''
 
   return (
     <div className="min-h-screen bg-[#F7F9FC] text-slate-800 font-sans">

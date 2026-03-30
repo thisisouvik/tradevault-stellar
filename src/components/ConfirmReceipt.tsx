@@ -27,7 +27,10 @@ export function ConfirmReceipt({ dealId, amountUSDC, sellerWallet, onSuccess }: 
 
     try {
       if (!(await isAllowed())) await setAllowed()
-      const { address } = await getAddress()
+      
+      const publicKeyObj = await getAddress()
+      const address = typeof publicKeyObj === 'string' ? publicKeyObj : (publicKeyObj as any).address        
+
       if (!address) throw new Error('Could not get Freighter address. Please unlock your wallet.')  
 
       if (!sellerWallet) {
@@ -43,7 +46,8 @@ export function ConfirmReceipt({ dealId, amountUSDC, sellerWallet, onSuccess }: 
         throw new Error('NEXT_PUBLIC_STELLAR_CONTRACT_ID is not configured')
       }
 
-      const releaseFundsOp = Operation.invokeHostFunction({
+      // Buyer calls confirm_package() to approve and release USDC to the seller
+      const confirmPackageOp = Operation.invokeHostFunction({
         func: xdr.HostFunction.hostFunctionTypeInvokeContract(
           new xdr.InvokeContractArgs({
             contractAddress: new Address(contractId).toScAddress(),
@@ -58,7 +62,7 @@ export function ConfirmReceipt({ dealId, amountUSDC, sellerWallet, onSuccess }: 
         fee: "100000",
         networkPassphrase: Networks.TESTNET,
       })
-        .addOperation(releaseFundsOp)
+        .addOperation(confirmPackageOp)
         .setTimeout(30)
         .build();
 

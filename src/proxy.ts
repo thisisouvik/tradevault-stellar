@@ -23,11 +23,14 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
 
+  // 1. Protected routes (require any auth)
   const protectedRoutes = ['/dashboard', '/deal', '/arbitrator', '/profile']
-  const isProtected = protectedRoutes.some(route => pathname.startsWith(route))
+  const isProtected = protectedRoutes.some((route) => pathname.startsWith(route))
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone()
@@ -36,14 +39,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // 2. Redirect authenticated users away from auth pages
   const authRoutes = ['/auth/signin', '/auth/signup']
-  const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))
+  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route))
   if (isAuthRoute && user) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
   }
 
+  // 3. Role-based guards (require DB lookup)
+  // Only enforce for seller/buyer-specific routes
   if (user && (pathname.startsWith('/deal/new') || pathname.startsWith('/arbitrator'))) {
     const { data: profile } = await supabase
       .from('profiles')
