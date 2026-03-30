@@ -1,6 +1,7 @@
 export interface CreateDealPayload {
   buyerEmail?: string
   buyerWallet?: string
+  arbitratorWallet?: string
   itemName?: string
   amountUSDC?: string
   deliveryDays?: string
@@ -8,16 +9,20 @@ export interface CreateDealPayload {
 
 export interface CreateDealValidationResult {
   ok: boolean
-  error?: 'Missing required fields' | 'Invalid amountUSDC' | 'Invalid deliveryDays'
+  error?: 'Missing required fields' | 'Invalid amountUSDC' | 'Invalid deliveryDays' | 'Invalid arbitratorWallet'
   amountUSDC?: number
   deliveryDays?: number
 }
 
 export function validateCreateDealPayload(payload: CreateDealPayload): CreateDealValidationResult {
-  const { buyerEmail, buyerWallet, itemName, amountUSDC, deliveryDays } = payload
+  const { buyerEmail, buyerWallet, arbitratorWallet, itemName, amountUSDC, deliveryDays } = payload
 
-  if (!buyerEmail || !buyerWallet || !itemName || !amountUSDC) {
+  if (!buyerEmail || !buyerWallet || !arbitratorWallet || !itemName || !amountUSDC) {
     return { ok: false, error: 'Missing required fields' }
+  }
+
+  if (!/^G[A-Z2-7]{20,}$/.test(arbitratorWallet.trim())) {
+    return { ok: false, error: 'Invalid arbitratorWallet' }
   }
 
   const parsedAmount = Number.parseInt(amountUSDC, 10)

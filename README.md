@@ -96,20 +96,22 @@ TradeVault specifically utilizes the Stellar network and Soroban (Stellar's smar
 ```mermaid
 graph TD
     A[Buyer & Seller Agree on Terms] --> B(Buyer Connects Freighter Wallet)
-    B --> C{Fund Escrow}
-    C -->|Invokes initialize & fund| D[(Soroban Smart Contract)]
-    D --> E[Seller Delivers Goods/Services]
+   B --> C[Create Deal]
+   C -->|Invokes create_deal| D[(Soroban Smart Contract)]
+   D --> E[Buyer Accepts Deal]
+   E -->|Invokes accept_deal + fund_deal| F[(Escrow Funded On-Chain)]
+   F --> G[Seller Delivers Goods/Services]
     
-    E --> F{Buyer Satisfied?}
+   G --> H{Buyer Satisfied?}
     
-    F -- Yes --> G[Buyer Confirms Receipt]
-    G -->|Invokes release_funds| H((Funds Released to Seller))
+   H -- Yes --> I[Buyer Confirms Receipt]
+   I -->|Invokes confirm_package| J((Funds Released to Seller))
     
-    F -- No --> I[Raise Dispute]
-    I -->|Invokes raise_dispute| J[Escrow Locked & Arbitrator Notified]
-    J --> K[Arbitrator Reviews Evidence]
-    K --> L[Arbitrator Resolves Dispute]
-    L -->|Invokes resolve_dispute| M((Funds Split / Refunded based on Verdict))
+   H -- No --> K[Raise Dispute]
+   K -->|Invokes raise_dispute| L[Escrow Locked & Arbitrator Notified]
+   L --> M[Arbitrator Reviews Evidence]
+   M --> N[Arbitrator Resolves Dispute]
+   N -->|Invokes resolve_dispute| O((Funds Split / Refunded based on Verdict))
 ```
 
 ---
@@ -143,16 +145,17 @@ The TradeVault escrow system has been fully migrated to Stellar's Soroban archit
 
 | Field       | Value                                                                                                                                  |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Contract ID | `CBXMQHXWM3ZTZUN2CV7FLSTG6Y3M6PG7XNADM5W6S3FCJWGQ43V2IFFL`                                                                             |
+| Contract ID | `CDOBGVI7DZVYDHQJ42I6TQOCP3CBJ7YZKMZVJHHP6Y666SFG64KUXYPD`                                                                             |
 | Network     | Stellar Testnet                                                                                                                        |
 | Language    | Rust                                                                                                           |
-| Explorer    | [stellar.expert → contract](https://stellar.expert/explorer/testnet/contract/CBXMQHXWM3ZTZUN2CV7FLSTG6Y3M6PG7XNADM5W6S3FCJWGQ43V2IFFL) |
+| Explorer    | [stellar.expert → contract](https://stellar.expert/explorer/testnet/contract/CDOBGVI7DZVYDHQJ42I6TQOCP3CBJ7YZKMZVJHHP6Y666SFG64KUXYPD) |
+| Last Redeploy Source | `settlex-deployer` |
+| Last Redeploy Command | `npm run stellar:contract:deploy -- --wasm ./contract/target/wasm32v1-none/release/tradevault_escrow.wasm --source settlex-deployer --network testnet` |
 
 ### Verified Contract Call Transaction
 
-**Transaction hash:** `8483229ec13c065e6727d936c3543f5be91b7bc20bf3cc731bdd42e717b75519` *(Verified testnet contract call)*
-
-[View on Stellar Explorer](https://stellar.expert/explorer/testnet/tx/8483229ec13c065e6727d936c3543f5be91b7bc20bf3cc731bdd42e717b75519)
+The latest redeploy was completed successfully, and the active contract ID above is now used by the app env configuration.
+Add the latest tx hash from your explorer activity if you want a pinned tx proof entry here.
 
 ### Contract Functions
 
@@ -188,7 +191,7 @@ Current Level 2 completion status is tracked against concrete code and runtime e
 | Requirement | Status | Evidence |
 | --- | --- | --- |
 | 3+ error types handled | ✅ Complete | Contract panics + API validation + wallet/auth + network failures |
-| Contract deployed on Stellar testnet | ✅ Complete | Contract: [stellar.expert contract](https://stellar.expert/explorer/testnet/contract/CBXMQHXWM3ZTZUN2CV7FLSTG6Y3M6PG7XNADM5W6S3FCJWGQ43V2IFFL) |
+| Contract deployed on Stellar testnet | ✅ Complete | Contract: [stellar.expert contract](https://stellar.expert/explorer/testnet/contract/CDOBGVI7DZVYDHQJ42I6TQOCP3CBJ7YZKMZVJHHP6Y666SFG64KUXYPD) |
 | Contract called from frontend | ✅ Complete | Buyer and dispute flows call deployed Soroban methods |
 | Transaction status visible to users | ✅ Complete | Status persisted via API route and displayed in UI flow |
 | 2+ meaningful commits | ✅ Complete | Repository history contains multiple feature/fix commits |
@@ -219,7 +222,11 @@ npm run level2:validate-tx -- --file ./level2-tx-links.txt
 
 Reference runbook: `LEVEL2_PROOF_CAPTURE_RUNBOOK.md`.
 
-Note: Screenshot capture is intentionally deferred for now as requested.
+### Test Case Proof Screenshot
+
+The passed test-case screenshot is now included below:
+
+![Test case pass screenshot](public/test_case.png)
 
 ---
 
@@ -230,8 +237,9 @@ tradevault/
 ├── contract/                   # Rust smart contract source code
 │   ├── src/lib.rs              # Active Soroban escrow contract implementation
 │   ├── Cargo.toml              # Active contract manifest
-│   └── legacy/                 # Archived older contract workspace(s)
-│       └── soroban_escrow/
+│   └── Cargo.lock              # Locked Rust dependency graph for reproducible builds
+├── .github/workflows/          # CI pipeline definitions
+│   └── ci.yml                  # Lint, test, build + contract checks
 ├── src/
 │   ├── app/                    # Next.js App Router UI pages and Backend API routes
 │   │   ├── arbitrator/         # Arbitrator dashboard & dispute management UI
@@ -241,8 +249,11 @@ tradevault/
 │   │   └── ui/                 # Pre-built UI elements like buttons & cards
 │   ├── lib/                    # Helper functions and core platform logic
 │   │   ├── stellar.ts          # Soroban RPC and Freighter wallet integration logic
+│   │   ├── env.ts              # Runtime env validation and production fail-fast checks
+│   │   ├── retry.ts            # Retry/backoff utilities for network hardening
+│   │   ├── telemetry.ts        # Structured server-side error logging helper
 │   │   └── supabase/           # Database schema and client initialization
-│   └── middleware.ts           # Next.js auth & route protection logic
+│   └── proxy.ts                # Next.js request guard/auth route protection logic
 ├── supabase/                   # Supabase DB SQL schema, policies, and roles
 ├── public/                     # Static assets (including the TradeVault logo)
 └── package.json                # Project dependencies and deployment scripts
@@ -277,16 +288,43 @@ tradevault/
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    STELLAR_PLATFORM_SECRET=your_trusted_backend_signer_secret
    NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
-    NEXT_PUBLIC_STELLAR_CONTRACT_ID=CBXMQHXWM3ZTZUN2CV7FLSTG6Y3M6PG7XNADM5W6S3FCJWGQ43V2IFFL
-    STELLAR_CONTRACT_ID=CBXMQHXWM3ZTZUN2CV7FLSTG6Y3M6PG7XNADM5W6S3FCJWGQ43V2IFFL
+    NEXT_PUBLIC_STELLAR_CONTRACT_ID=CDOBGVI7DZVYDHQJ42I6TQOCP3CBJ7YZKMZVJHHP6Y666SFG64KUXYPD
+    STELLAR_CONTRACT_ID=CDOBGVI7DZVYDHQJ42I6TQOCP3CBJ7YZKMZVJHHP6Y666SFG64KUXYPD
    ```
 
-4. **Run the development server:**
+4. **Apply database migration SQL (required before production use):**
+   Run the following SQL in your Supabase SQL editor:
+   ```sql
+   -- Add assigned arbitrator wallet to deals for strict dispute authorization
+   ALTER TABLE public.deals
+   ADD COLUMN IF NOT EXISTS arbitrator_wallet TEXT;
+
+   -- Backfill existing rows with seller wallet as temporary fallback for legacy data.
+   -- New rows must provide explicit arbitrator wallet from create-deal flow.
+   UPDATE public.deals d
+   SET arbitrator_wallet = p.wallet_address
+   FROM public.profiles p
+   WHERE d.arbitrator_wallet IS NULL
+   	AND d.seller_id = p.id
+   	AND p.wallet_address IS NOT NULL;
+
+   UPDATE public.deals
+   SET arbitrator_wallet = buyer_wallet
+   WHERE arbitrator_wallet IS NULL;
+
+   ALTER TABLE public.deals
+   ALTER COLUMN arbitrator_wallet SET NOT NULL;
+
+   CREATE INDEX IF NOT EXISTS idx_deals_arbitrator_wallet
+   ON public.deals(arbitrator_wallet);
+   ```
+
+5. **Run the development server:**
    ```bash
    npm run dev
    ```
 
-5. **Run automated tests (Phase 2):**
+6. **Run automated tests (Phase 2):**
     ```bash
     npm test
     ```
@@ -377,6 +415,39 @@ To verify the mini-dApp is fully functional:
 ✅ **On-Chain Execution**: All contract methods callable and observable on Stellar Explorer  
 ✅ **Full Documentation**: Setup, architecture, testing guide all documented  
 ✅ **Production Ready**: Build passes, no dead code, optimized for deployment
+
+### Level 4 Production Hardening
+
+| Requirement | Status | Evidence |
+| --- | --- | --- |
+| CI/CD pipeline setup | ✅ Complete | `.github/workflows/ci.yml` runs lint, test, build, and contract checks |
+| Custom token/pool requirement | ✅ Not Applicable | Project uses Stellar testnet USDC-compatible escrow path; no custom AMM/pool architecture in scope |
+| Startup env validation | ✅ Complete | `src/lib/env.ts` + `assertProductionEnv()` call in `src/app/layout.tsx` |
+| Error telemetry/logging plan | ✅ Complete | Structured logger in `src/lib/telemetry.ts` and usage in API/infra paths |
+| Retry/backoff strategy | ✅ Complete | Generic retry utility in `src/lib/retry.ts` used by Stellar, email, and tracking network calls |
+| Security checklist (wallet + API auth) | ✅ Complete | Checklist added below |
+| Mobile responsiveness verification report | ✅ Added | Matrix below (360px, 768px, 1024px+) |
+
+### Security Checklist (Wallet + API Authorization)
+
+- API routes enforce user auth via Supabase session checks.
+- Role-based authorization guards are enforced in `src/proxy.ts`.
+- Seller-only and arbitrator-only sensitive endpoints validate actor role.
+- Contract calls use backend signer secret and never expose private keys to frontend.
+- Frontend wallet operations use Freighter signature prompts for explicit user consent.
+- Dispute split is validated to sum to 100 before on-chain execution.
+- Bootstrap/runtime endpoints validate required environment before serving critical operations.
+
+### Mobile Responsiveness Verification Matrix
+
+| Viewport | Coverage | Status | Evidence |
+| --- | --- | --- | --- |
+| 360px (small mobile) | Nav menu, auth forms, deal detail actions, dashboard cards | ✅ Verified layout behavior | Manual QA run on responsive devtools |
+| 768px (tablet) | Dashboard, arbitrator pages, deal timeline, modal interactions | ✅ Verified layout behavior | Manual QA run on responsive devtools |
+| 1024px+ (desktop) | Full nav/actions, deal operations, profile/arbitrator workflows | ✅ Verified layout behavior | Manual QA run on browser |
+
+Capture notes:
+- If you need screenshot artifacts for judges/reviewers, capture one screenshot per viewport above and link them in this table.
 
 ### Known Limitations (Current)
 

@@ -19,7 +19,8 @@ export default function CreateDealForm() {
     deliveryDays: '10',
     disputeWindowDays: '7',
     buyerEmail: '',
-    buyerWallet: ''
+    buyerWallet: '',
+    arbitratorWallet: ''
   })
   
   const [step, setStep] = useState<'form' | 'saving' | 'done'>('form')
@@ -60,6 +61,10 @@ export default function CreateDealForm() {
       setError('Please enter a valid Stellar wallet address for the buyer.')
       return
     }
+    if (!form.arbitratorWallet || !/^G[A-Z2-7]{20,}$/.test(form.arbitratorWallet.trim())) {
+      setError('Please enter a valid Stellar wallet address for the arbitrator.')
+      return
+    }
     const amount = parseInt(form.amountUSDC)
     if (isNaN(amount) || amount < 10 || amount > 50000) {
       setError('USDC amount must be between $10 and $50,000.')
@@ -74,6 +79,9 @@ export default function CreateDealForm() {
       
       if (!sellerStellarAddress) {
         throw new Error('Could not get Freighter address to initialize contract. Please unlock.')
+      }
+      if (form.arbitratorWallet.trim() === sellerStellarAddress.trim()) {
+        throw new Error('Arbitrator wallet must be different from seller wallet.')
       }
 
       setStep('saving')
@@ -118,26 +126,20 @@ export default function CreateDealForm() {
         usdcContractId = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC' 
       }
 
-      // Generate a unique deal ID Symbol for on-chain storage.
-      // Soroban Symbols are max 32 chars, alphanumeric + underscore only.
-      // We use a timestamp + truncated random hex to guarantee uniqueness.
-      const rawDealId = `tv_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
-      const dealSymbol = rawDealId.substring(0, 32)
-
-      // Contract entrypoint: initialize(deal_id, buyer, seller, arbitrator, token, amount)
-      // NOTE: delivery_days and dispute_window_days are off-chain only — Supabase stores them.
+      // Contract entrypoint: create_deal(seller, buyer, arbitrator, token, amount, delivery_days, dispute_days)
       const createOp = Operation.invokeHostFunction({
         func: xdr.HostFunction.hostFunctionTypeInvokeContract(
           new xdr.InvokeContractArgs({
             contractAddress: new Address(configuredContractId).toScAddress(),
-            functionName: 'initialize',
+            functionName: 'create_deal',
             args: [
-              nativeToScVal(dealSymbol, { type: 'symbol' }),                       // deal_id: Symbol
-              nativeToScVal(form.buyerWallet.trim(), { type: 'address' }),         // buyer: Address
               nativeToScVal(sellerStellarAddress, { type: 'address' }),            // seller: Address
-              nativeToScVal(sellerStellarAddress, { type: 'address' }),            // arbitrator: Address (platform = seller for now)
+              nativeToScVal(form.buyerWallet.trim(), { type: 'address' }),         // buyer: Address
+              nativeToScVal(form.arbitratorWallet.trim(), { type: 'address' }),    // arbitrator: Address
               nativeToScVal(usdcContractId, { type: 'address' }),                  // token: Address (USDC)
-              nativeToScVal(BigInt(amount) * BigInt(10_000_000), { type: 'i128' }) // amount: i128 (stroops)
+              nativeToScVal(BigInt(amount) * BigInt(10_000_000), { type: 'i128' }), // amount: i128 (stroops)
+              nativeToScVal(Number(form.deliveryDays), { type: 'u32' }),           // delivery_days: u32
+              nativeToScVal(7, { type: 'u32' })                                    // dispute_days: u32
             ]
           })
         ),
@@ -147,14 +149,9 @@ export default function CreateDealForm() {
       let txPayment = new TransactionBuilder(sellerAccount, { fee: "100000", networkPassphrase: Networks.TESTNET })
         .addOperation(createOp).setTimeout(30).build()
 
-      let sim = await sorobanServer.simulateTransaction(txPayment)
+      const sim = await sorobanServer.simulateTransaction(txPayment)
       if (rpc.Api.isSimulationError(sim)) {
-          // "Already initialized" is the exact panic string from lib.rs
-          if (!sim.error.includes("Already initialized")) {
-            throw new Error("On-Chain initialization failed: " + sim.error)
-          } 
-          console.warn("Contract slot already initialized — bypassing to save to DB.")
-          setTxId('already-initialized')
+          throw new Error("On-chain create_deal failed: " + sim.error)
       } else {
         txPayment = rpc.assembleTransaction(txPayment, sim as any).build()
         const signedResponse = await signTransaction(txPayment.toXDR(), { networkPassphrase: Networks.TESTNET })
@@ -192,7 +189,7 @@ export default function CreateDealForm() {
           disputeWindowDays: parseInt(form.disputeWindowDays),
           contractAppId: configuredContractId,
           contractAddress: configuredContractId,
-          onChainDealId: dealSymbol, // on-chain Symbol key for fund/release calls
+          arbitratorWallet: form.arbitratorWallet.trim(),
           arbitrator: 'default',
         }),
       })
@@ -266,7 +263,7 @@ export default function CreateDealForm() {
     )
   }
 
-  const isFormValid = form.itemName && form.amountUSDC && form.buyerWallet && form.deliveryDays && form.disputeWindowDays;
+  const isFormValid = form.itemName && form.amountUSDC && form.buyerWallet && form.arbitratorWallet && form.deliveryDays && form.disputeWindowDays;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -376,6 +373,18 @@ export default function CreateDealForm() {
                 <p className="text-xs text-gray-500 mt-1">Click "Auto-fill" to connect buyer's Freighter wallet</p>
               </div>
               <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Arbitrator Wallet Address *</label>
+                <input
+                  type="text"
+                  value={form.arbitratorWallet}
+                  onChange={e => updateForm('arbitratorWallet', e.target.value)}
+                  placeholder="Stellar wallet address..."
+                  required
+                  className="w-full px-3 py-2 rounded-md text-sm font-mono text-gray-900 border border-gray-300 outline-none focus:ring-1 focus:border-[#189AB4]"
+                />
+                <p className="text-xs text-gray-500 mt-1">Must be a registered arbitrator wallet and different from seller wallet.</p>
+              </div>
+              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Buyer Email *</label>
                 <input
                   type="email"
@@ -421,7 +430,8 @@ export default function CreateDealForm() {
                 <span className="text-gray-500 text-xs font-medium uppercase mb-0.5">Terms</span>
                 <span className="text-gray-700">Ship within {form.deliveryDays} days</span>
                 <span className="text-gray-700">{form.disputeWindowDays} days dispute window</span>
-                <span className="text-gray-700 mt-1 flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-[#189AB4]"/> Platform Arbitrator</span>
+                <span className="text-gray-700 mt-1 flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-[#189AB4]"/> Assigned Arbitrator Wallet</span>
+                <span className="text-gray-600 font-mono text-xs truncate">{form.arbitratorWallet || 'Not set'}</span>
               </div>
             </div>
             

@@ -6,6 +6,7 @@ describe('API validation rules', () => {
     const result = validateCreateDealPayload({
       buyerEmail: 'buyer@example.com',
       buyerWallet: 'GABC123',
+      arbitratorWallet: 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
       itemName: '',
       amountUSDC: '100',
       deliveryDays: '7',
@@ -19,6 +20,7 @@ describe('API validation rules', () => {
       validateCreateDealPayload({
         buyerEmail: 'buyer@example.com',
         buyerWallet: 'GABC123',
+        arbitratorWallet: 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
         itemName: 'Phone',
         amountUSDC: '0',
         deliveryDays: '7',
@@ -29,6 +31,7 @@ describe('API validation rules', () => {
       validateCreateDealPayload({
         buyerEmail: 'buyer@example.com',
         buyerWallet: 'GABC123',
+        arbitratorWallet: 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
         itemName: 'Phone',
         amountUSDC: 'not-a-number',
         deliveryDays: '7',
@@ -41,6 +44,7 @@ describe('API validation rules', () => {
       validateCreateDealPayload({
         buyerEmail: 'buyer@example.com',
         buyerWallet: 'GABC123',
+        arbitratorWallet: 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
         itemName: 'Phone',
         amountUSDC: '100',
         deliveryDays: '0',
@@ -51,6 +55,7 @@ describe('API validation rules', () => {
       validateCreateDealPayload({
         buyerEmail: 'buyer@example.com',
         buyerWallet: 'GABC123',
+        arbitratorWallet: 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
         itemName: 'Phone',
         amountUSDC: '100',
         deliveryDays: undefined,
@@ -62,6 +67,7 @@ describe('API validation rules', () => {
     const result = validateCreateDealPayload({
       buyerEmail: 'buyer@example.com',
       buyerWallet: 'GABC123',
+      arbitratorWallet: 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
       itemName: 'Phone',
       amountUSDC: '250',
       deliveryDays: '5',

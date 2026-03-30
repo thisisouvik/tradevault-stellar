@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyStellarRuntime } from '@/lib/stellar'
 import { createClient } from '@/lib/supabase/server'
+import { logServerError } from '@/lib/telemetry'
 
 /**
  * POST /api/deals/bootstrap
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
       contractId,
     })
   } catch (err: any) {
-    console.error('[bootstrap] Error:', err)
+    logServerError('api.bootstrap.failed', err)
     return NextResponse.json(
       { error: err?.message || 'Bootstrap failed' },
       { status: 500 }

@@ -25,14 +25,12 @@ export default async function ArbitratorIndexPage() {
     redirect('/arbitrator/profile?walletRequired=1')
   }
 
-  // Fetch all disputes assigned to this arbitrator
-  // Wait, right now we don't have an arbitrator_id column on deals.
-  // Deals just have status = DISPUTED. Let's fetch all disputed deals
-  // Since we only have "Platform Arbitrator", all disputes go to platform arbitrators.
+  // Fetch disputes assigned to this arbitrator wallet.
   const { data: activeDisputes } = await supabase
     .from('deals')
     .select(`*, profiles:seller_id (name, email), evidence (*)`)
     .eq('status', 'DISPUTED')
+    .eq('arbitrator_wallet', profile.wallet_address)
     .order('created_at', { ascending: true }) // Oldest first for queue (by spec)
 
   // Fetch resolved disputes history
@@ -40,6 +38,7 @@ export default async function ArbitratorIndexPage() {
     .from('deals')
     .select(`*, profiles:seller_id (name, email)`)
     .eq('status', 'RESOLVED')
+    .eq('arbitrator_wallet', profile.wallet_address)
     .order('updated_at', { ascending: false })
 
   return (

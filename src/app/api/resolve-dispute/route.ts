@@ -45,6 +45,12 @@ export async function POST(request: NextRequest) {
 
     if (!deal) return NextResponse.json({ error: 'Deal not found' }, { status: 404 })
     if (deal.status !== 'DISPUTED') return NextResponse.json({ error: 'Deal must be in DISPUTED state' }, { status: 400 })
+    if (!deal.arbitrator_wallet) {
+      return NextResponse.json({ error: 'Deal has no assigned arbitrator wallet' }, { status: 400 })
+    }
+    if (deal.arbitrator_wallet.trim().toUpperCase() !== actorProfile.wallet_address.trim().toUpperCase()) {
+      return NextResponse.json({ error: 'Only the assigned arbitrator can resolve this dispute' }, { status: 403 })
+    }
 
     // Call resolve_dispute() on Stellar Soroban contract
     const contractId = deal.contract_address || deal.contract_app_id

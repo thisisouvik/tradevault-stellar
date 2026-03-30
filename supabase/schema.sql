@@ -42,6 +42,7 @@ CREATE TABLE public.deals (
   seller_id           UUID NOT NULL REFERENCES public.profiles(id),
   buyer_email         TEXT NOT NULL,
   buyer_wallet        TEXT NOT NULL,
+  arbitrator_wallet   TEXT NOT NULL,
   item_name           TEXT NOT NULL,
   item_description    TEXT,
   amount_usdc         INTEGER NOT NULL,
@@ -149,4 +150,5 @@ CREATE POLICY "Users can view evidence" ON storage.objects
 CREATE INDEX idx_deals_seller_id ON public.deals(seller_id);
 CREATE INDEX idx_deals_status ON public.deals(status);
 CREATE INDEX idx_deals_buyer_email ON public.deals(buyer_email);
+CREATE INDEX idx_deals_arbitrator_wallet ON public.deals(arbitrator_wallet);
 CREATE INDEX idx_evidence_deal_id ON public.evidence(deal_id);
