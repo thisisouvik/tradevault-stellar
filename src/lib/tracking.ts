@@ -28,7 +28,6 @@ export async function verifyTrackingNumber(
   const apiKey = process.env.TRACKINGMORE_API_KEY
   if (!apiKey) {
     // Dev mode: accept any tracking number
-    console.warn('TRACKINGMORE_API_KEY not set — accepting any tracking number in dev mode')
     return { valid: true }
   }
 
@@ -50,8 +49,7 @@ export async function verifyTrackingNumber(
       return detected ? { valid: true } : { valid: false, error: 'Tracking number not found for this carrier' }
     }
     return { valid: false, error: 'Invalid tracking number' }
-  } catch (error) {
-    console.error('TrackingMore verify error:', error)
+  } catch {
     return { valid: true } // Fail open in dev
   }
 }
@@ -110,8 +108,7 @@ export async function getTrackingStatus(
       checkpoints,
       isDelivered: tracking.package_status === 'Delivered',
     }
-  } catch (error) {
-    console.error('TrackingMore status error:', error)
+  } catch {
     return null
   }
 }

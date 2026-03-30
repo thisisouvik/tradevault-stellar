@@ -143,37 +143,83 @@ The TradeVault escrow system has been fully migrated to Stellar's Soroban archit
 
 | Field       | Value                                                                                                                                  |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Contract ID | `CD7P7SINFDFSHLBOGEBFMAJWPZC4CULFASS4JQF22YJ3LQVNNJRWV2HP`                                                                             |
+| Contract ID | `CBXMQHXWM3ZTZUN2CV7FLSTG6Y3M6PG7XNADM5W6S3FCJWGQ43V2IFFL`                                                                             |
 | Network     | Stellar Testnet                                                                                                                        |
 | Language    | Rust                                                                                                           |
-| Explorer    | [stellar.expert → contract](https://stellar.expert/explorer/testnet/contract/CD7P7SINFDFSHLBOGEBFMAJWPZC4CULFASS4JQF22YJ3LQVNNJRWV2HP) |
+| Explorer    | [stellar.expert → contract](https://stellar.expert/explorer/testnet/contract/CBXMQHXWM3ZTZUN2CV7FLSTG6Y3M6PG7XNADM5W6S3FCJWGQ43V2IFFL) |
 
 ### Verified Contract Call Transaction
 
-**Transaction hash:** `71fa9900c3b53f6fbacdb560a8b92b67f168fbc50fbcc4468f71295fc74f4b23` *(Example initialization)*
+**Transaction hash:** `8483229ec13c065e6727d936c3543f5be91b7bc20bf3cc731bdd42e717b75519` *(Verified testnet contract call)*
 
-[View on Stellar Explorer](https://stellar.expert/explorer/testnet/tx/71fa9900c3b53f6fbacdb560a8b92b67f168fbc50fbcc4468f71295fc74f4b23)
+[View on Stellar Explorer](https://stellar.expert/explorer/testnet/tx/8483229ec13c065e6727d936c3543f5be91b7bc20bf3cc731bdd42e717b75519)
 
 ### Contract Functions
 
 | Function                                                              | Type  | Purpose                                                 |
 | --------------------------------------------------------------------- | ----- | ------------------------------------------------------- |
-| `initialize(deal_id, buyer, seller, arbitrator, token, amount)`       | Write | Sets up the initial escrow terms and participants       |
-| `fund(deal_id, buyer)`                                                | Write | Pulls funds from buyer's wallet into the smart contract |
-| `release_funds(deal_id, buyer)`                                       | Write | Buyer approves transferring the locked USDC to seller   |
-| `raise_dispute(deal_id, caller)`                                      | Write | Either party can lock the escrow to require an admin    |
-| `resolve_dispute(deal_id, arbitrator, buyer_amount, seller_amount)`   | Write | Arbitrator splits the funds between buyer and seller    |
-| `get_status(deal_id)`                                                 | Read  | Checks the real-time funding and dispute status         |
+| `create_deal(seller, buyer, arbitrator, token, amount_usdc, delivery_days, dispute_days)` | Write | Creates escrow terms for a single contract instance |
+| `accept_deal()`                                                       | Write | Buyer accepts a proposed deal                            |
+| `fund_deal()`                                                         | Write | Transfers escrow amount from buyer to contract           |
+| `submit_delivery(tracking_hash)`                                      | Write | Seller submits delivery and starts dispute window        |
+| `confirm_package()`                                                   | Write | Buyer confirms receipt and releases funds to seller      |
+| `raise_dispute(reason_hash)`                                          | Write | Buyer raises dispute while dispute window is active      |
+| `resolve_dispute(seller_pct, buyer_pct)`                              | Write | Arbitrator splits escrow amount by percentages           |
+| `timeout_release()`                                                   | Write | Releases funds to seller after dispute window closes     |
+| `get_state()`                                                         | Read  | Returns current deal state enum                          |
 
 **Error codes / Panics handled:**
 
 | Condition              | Meaning                                                                    |
 | ---------------------- | -------------------------------------------------------------------------- |
-| `Already initialized`  | Deal state is already configured on-chain                                  |
-| `Cannot fund`          | Status is not awaiting funding                                             |
-| `Only buyer can fund`  | Validates that the transaction signer matches the initial configuration    |
-| `Cannot release`       | Execution blocked because funds are not currently locked in the contract   |
-| `Resolution mismatch`  | Split logic amounts do not sum perfectly to the total escrow lock          |
+| `deal already initialized` | Contract instance was already initialized                               |
+| `amount must be > 0`       | Escrow amount must be positive                                          |
+| `delivery_days must be > 0`| Delivery SLA must be positive                                           |
+| `dispute_days must be > 0` | Dispute window must be positive                                         |
+| `invalid state transition` | Called function is not valid for current deal state                     |
+| `dispute window closed`    | Dispute cannot be raised after cutoff                                   |
+| `dispute window still active` | Timeout release called before dispute window expires                 |
+| `percentages must sum to 100` | Arbitrator split must total exactly 100%                            |
+
+### Level 2 Completion Checklist
+
+Current Level 2 completion status is tracked against concrete code and runtime evidence.
+
+| Requirement | Status | Evidence |
+| --- | --- | --- |
+| 3+ error types handled | ✅ Complete | Contract panics + API validation + wallet/auth + network failures |
+| Contract deployed on Stellar testnet | ✅ Complete | Contract: [stellar.expert contract](https://stellar.expert/explorer/testnet/contract/CBXMQHXWM3ZTZUN2CV7FLSTG6Y3M6PG7XNADM5W6S3FCJWGQ43V2IFFL) |
+| Contract called from frontend | ✅ Complete | Buyer and dispute flows call deployed Soroban methods |
+| Transaction status visible to users | ✅ Complete | Status persisted via API route and displayed in UI flow |
+| 2+ meaningful commits | ✅ Complete | Repository history contains multiple feature/fix commits |
+| Real-time approach clarified | ✅ Complete | Polling-based updates (30s in development, 2h in production) + daily timeout cron |
+
+Level 2 tx-link proof capture (screenshots intentionally deferred):
+
+- Happy path tx links:
+    - create_deal: TODO
+    - accept_deal + fund_deal: TODO
+    - submit_delivery: TODO
+    - confirm_package: TODO
+- Dispute path tx links:
+    - raise_dispute: TODO
+    - resolve_dispute: TODO
+
+Validate collected tx links in one command:
+
+```bash
+npm run level2:validate-tx -- <tx-hash-or-explorer-url> <tx-hash-or-explorer-url>
+```
+
+Or validate from a file (one hash/url per line):
+
+```bash
+npm run level2:validate-tx -- --file ./level2-tx-links.txt
+```
+
+Reference runbook: `LEVEL2_PROOF_CAPTURE_RUNBOOK.md`.
+
+Note: Screenshot capture is intentionally deferred for now as requested.
 
 ---
 
@@ -182,7 +228,10 @@ The TradeVault escrow system has been fully migrated to Stellar's Soroban archit
 ```text
 tradevault/
 ├── contract/                   # Rust smart contract source code
-│   └── smart_contracts/        # Soroban contract for escrow logic (fund, release, dispute)
+│   ├── src/lib.rs              # Active Soroban escrow contract implementation
+│   ├── Cargo.toml              # Active contract manifest
+│   └── legacy/                 # Archived older contract workspace(s)
+│       └── soroban_escrow/
 ├── src/
 │   ├── app/                    # Next.js App Router UI pages and Backend API routes
 │   │   ├── arbitrator/         # Arbitrator dashboard & dispute management UI
@@ -228,7 +277,8 @@ tradevault/
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    STELLAR_PLATFORM_SECRET=your_trusted_backend_signer_secret
    NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
-   NEXT_PUBLIC_STELLAR_CONTRACT_ID=CD7P7SINFDFSHLBOGEBFMAJWPZC4CULFASS4JQF22YJ3LQVNNJRWV2HP
+    NEXT_PUBLIC_STELLAR_CONTRACT_ID=CBXMQHXWM3ZTZUN2CV7FLSTG6Y3M6PG7XNADM5W6S3FCJWGQ43V2IFFL
+    STELLAR_CONTRACT_ID=CBXMQHXWM3ZTZUN2CV7FLSTG6Y3M6PG7XNADM5W6S3FCJWGQ43V2IFFL
    ```
 
 4. **Run the development server:**
@@ -236,7 +286,63 @@ tradevault/
    npm run dev
    ```
 
-5. **Open the App:**
+5. **Run automated tests (Phase 2):**
+    ```bash
+    npm test
+    ```
+
+### Test Coverage (Phase 2)
+
+Current automated tests validate core escrow lifecycle and API validation rules:
+
+- Supported patch statuses for deal updates
+- Valid and invalid escrow state transitions (e.g. `PROPOSED -> FUNDED`, `DELIVERED -> COMPLETED`)
+- Stellar transaction hash format validation
+- Action-to-contract-method mapping (`fund`, `confirm`, `dispute`)
+- Create-deal payload validation (required fields, positive amount, positive delivery days)
+- Dispute split validation (buyer/seller percentages must sum to `100`)
+
+Latest local run status: **10 tests passing**.
+
+Sample local output:
+
+```text
+RUN  v3.2.4 /home/soumen/stellar/tradevault-stellar
+✓ tests/apiValidators.test.ts (5 tests)
+✓ tests/dealLifecycle.test.ts (5 tests)
+Test Files  2 passed (2)
+Tests      10 passed (10)
+```
+
+### Level 3 Delivery Artifacts
+
+Use this section to track and attach required Level 3 evidence.
+
+| Requirement | Status | Evidence |
+| --- | --- | --- |
+| Automated tests (3+) | ✅ Complete | `npm test` (10 passing) |
+| Happy-path flow proof | ⏳ Pending manual capture | Add tx hash + screenshots |
+| Dispute-path flow proof | ⏳ Pending manual capture | Add tx hash + screenshots |
+| Demo video | ⏳ Pending upload | Add video URL |
+
+Happy-path proof links (create -> fund -> submit delivery -> confirm):
+- TODO: Stellar Explorer tx link(s)
+- TODO: screenshot link(s)
+
+Dispute-path proof links (raise dispute -> resolve dispute):
+- TODO: Stellar Explorer tx link(s)
+- TODO: screenshot link(s)
+
+Demo video:
+- TODO: add public video URL
+
+### Known Limitations (Current)
+
+- Real-time updates are currently polling-based, not event-subscription based.
+- End-to-end flow proof links and screenshots are not committed yet.
+- Demo video URL has not been attached yet.
+
+6. **Open the App:**
    Navigate to [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---

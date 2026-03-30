@@ -7,6 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "level2:validate-tx": "node scripts/validate-level2-tx-links.js",
     "stellar:wallet:generate": "node scripts/generateWallet.js",
     "stellar:wallet:setup": "node scripts/setupWallet.js",
     "stellar:contract:deploy": "node scripts/deploy.js"
@@ -38,6 +41,7 @@
     "eslint": "^9",
     "eslint-config-next": "^16",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.4"
   }
 }

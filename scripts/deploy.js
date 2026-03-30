@@ -7,7 +7,7 @@
  *   node scripts/deploy.js --wasm <path-to-wasm> --source <identity> [--network testnet]
  *
  * Example:
- *   node scripts/deploy.js --wasm ./contract/target/wasm32-unknown-unknown/release/escrow.wasm --source tv-deployer --network testnet
+ *   node scripts/deploy.js --wasm ./contract/target/wasm32v1-none/release/tradevault_escrow.wasm --source tv-deployer --network testnet
  */
 
 const fs = require('fs');
@@ -57,10 +57,17 @@ function main() {
     process.exit(1);
   }
 
-  const candidates = [
-    path.resolve(process.cwd(), wasmPath),
-    path.resolve(__dirname, '..', wasmPath),
+  const defaultWasmCandidates = [
+    path.resolve(__dirname, '..', 'contract/target/wasm32v1-none/release/tradevault_escrow.wasm'),
+    path.resolve(__dirname, '..', 'contract/target/wasm32-unknown-unknown/release/escrow.wasm'),
   ];
+
+  const candidates = wasmPath
+    ? [
+        path.resolve(process.cwd(), wasmPath),
+        path.resolve(__dirname, '..', wasmPath),
+      ]
+    : defaultWasmCandidates;
   const resolvedWasm = candidates.find((p) => fs.existsSync(p));
 
   if (!resolvedWasm) {

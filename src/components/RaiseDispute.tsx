@@ -8,18 +8,14 @@ import { Horizon, rpc, Address, nativeToScVal, xdr, TransactionBuilder, Operatio
 
 interface RaiseDisputeProps {
   dealId: string
-  appId: string
-  buyerWallet: string
   onSuccess: () => void
 }
 
-export function RaiseDispute({ dealId, appId, buyerWallet, onSuccess }: RaiseDisputeProps) {        
+export function RaiseDispute({ dealId, onSuccess }: RaiseDisputeProps) {        
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [confirmed, setConfirmed] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
-  void appId
-  void buyerWallet
 
   async function handleDispute() {
     setError('')
@@ -32,23 +28,25 @@ export function RaiseDispute({ dealId, appId, buyerWallet, onSuccess }: RaiseDis
 
       if (!address) throw new Error('Could not get Freighter address. Please unlock your wallet.')  
 
-      const sorobanServer = new rpc.Server("https://soroban-testnet.stellar.org")
-      const server = new Horizon.Server("https://horizon-testnet.stellar.org")
+      const sorobanServer = new rpc.Server(process.env.NEXT_PUBLIC_STELLAR_RPC_URL || "https://soroban-testnet.stellar.org")
+      const server = new Horizon.Server(process.env.NEXT_PUBLIC_STELLAR_HORIZON_URL || "https://horizon-testnet.stellar.org")
       const userAccount = await server.loadAccount(address)
 
-      const contractId = process.env.NEXT_PUBLIC_STELLAR_CONTRACT_ID || "CD7P7SINFDFSHLBOGEBFMAJWPZC4CULFASS4JQF22YJ3LQVNNJRWV2HP"
+      const contractId = process.env.NEXT_PUBLIC_STELLAR_CONTRACT_ID
+      if (!contractId) {
+        throw new Error('NEXT_PUBLIC_STELLAR_CONTRACT_ID is not configured')
+      }
 
-      // Create a hash of the dispute reason from the dealId and timestamp
-      const reasonHash = new TextEncoder().encode(dealId + Date.now().toString())
+      const reasonSeed = `${dealId}:${address}:${Date.now()}`
+      const reasonDigest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(reasonSeed))
+      const reasonHashBytes = new Uint8Array(reasonDigest)
 
       const disputeOp = Operation.invokeHostFunction({
         func: xdr.HostFunction.hostFunctionTypeInvokeContract(
           new xdr.InvokeContractArgs({
             contractAddress: new Address(contractId).toScAddress(),
             functionName: 'raise_dispute',
-            args: [
-              nativeToScVal(reasonHash, { type: 'bytes' })
-            ]
+            args: [nativeToScVal(reasonHashBytes, { type: 'bytes' })]
           })
         ),
         auth: []

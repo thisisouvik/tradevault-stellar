@@ -5,24 +5,20 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Wallet, Zap, AlertCircle, CheckCircle2, ExternalLink } from 'lucide-react'
 
 import { isAllowed, setAllowed, getAddress, signTransaction } from '@stellar/freighter-api'
-import { Horizon, rpc, Address, nativeToScVal, xdr, TransactionBuilder, Operation, Networks, Contract, Asset } from '@stellar/stellar-sdk'
+import { Horizon, rpc, Address, xdr, TransactionBuilder, Operation, Networks } from '@stellar/stellar-sdk'
 
 interface FundEscrowProps {
   dealId: string
-  appId: string
-  appAddress: string
   amountUSDC: number
-  buyerWallet: string
   sellerWallet: string
   onSuccess: () => void
 }
 
-export function FundEscrow({ dealId, appId, appAddress, amountUSDC, buyerWallet, sellerWallet, onSuccess }: FundEscrowProps) {
+export function FundEscrow({ dealId, amountUSDC, sellerWallet, onSuccess }: FundEscrowProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [txId, setTxId] = useState('')
   const [done, setDone] = useState(false)
-  const [_legacyContext] = useState({ appId, appAddress, buyerWallet })
 
   async function handleFund() {
     setError('')
@@ -35,8 +31,8 @@ export function FundEscrow({ dealId, appId, appAddress, amountUSDC, buyerWallet,
 
       if (!address) throw new Error('Could not get Freighter address. Please unlock your wallet.')
       
-      const server = new Horizon.Server("https://horizon-testnet.stellar.org")
-      const sorobanServer = new rpc.Server("https://soroban-testnet.stellar.org")
+      const server = new Horizon.Server(process.env.NEXT_PUBLIC_STELLAR_HORIZON_URL || "https://horizon-testnet.stellar.org")
+      const sorobanServer = new rpc.Server(process.env.NEXT_PUBLIC_STELLAR_RPC_URL || "https://soroban-testnet.stellar.org")
       const userAccount = await server.loadAccount(address)
 
       // Find USDC balance to correctly identify the testnet issuer 
@@ -45,9 +41,10 @@ export function FundEscrow({ dealId, appId, appAddress, amountUSDC, buyerWallet,
         throw new Error(`Insufficient USDC balance. You need ${amountUSDC} USDC. Use the Dev Faucet!`)
       }
 
-      const contractId = process.env.NEXT_PUBLIC_STELLAR_CONTRACT_ID || "CD7P7SINFDFSHLBOGEBFMAJWPZC4CULFASS4JQF22YJ3LQVNNJRWV2HP"
-      
-      // Buyer calls accept_deal() to accept the seller's proposed deal
+      const contractId = process.env.NEXT_PUBLIC_STELLAR_CONTRACT_ID
+      if (!contractId) {
+        throw new Error('NEXT_PUBLIC_STELLAR_CONTRACT_ID is not configured')
+      }
       const acceptOp = Operation.invokeHostFunction({
         func: xdr.HostFunction.hostFunctionTypeInvokeContract(
           new xdr.InvokeContractArgs({
@@ -82,7 +79,7 @@ export function FundEscrow({ dealId, appId, appAddress, amountUSDC, buyerWallet,
 
       let sim = await sorobanServer.simulateTransaction(txPayment);
       if (rpc.Api.isSimulationError(sim)) {
-          console.warn("Accept+Fund sim failed, trying just Fund if already accepted", sim.error);
+          console.warn("Accept+Fund simulation failed, trying just Fund if already accepted", sim.error);
           txPayment = new TransactionBuilder(userAccount, {
             fee: "100000",
             networkPassphrase: Networks.TESTNET,

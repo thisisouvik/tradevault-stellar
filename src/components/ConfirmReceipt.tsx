@@ -4,25 +4,21 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react'
 import { isAllowed, setAllowed, getAddress, signTransaction } from '@stellar/freighter-api'
-import { Horizon, rpc, Address, nativeToScVal, xdr, TransactionBuilder, Operation, Networks } from '@stellar/stellar-sdk'
+import { Horizon, rpc, Address, xdr, TransactionBuilder, Operation, Networks } from '@stellar/stellar-sdk'
 
 interface ConfirmReceiptProps {
   dealId: string
-  appId: string
   amountUSDC: number
-  buyerWallet: string
   sellerWallet: string
   onSuccess: () => void
 }
 
-export function ConfirmReceipt({ dealId, appId, amountUSDC, buyerWallet, sellerWallet, onSuccess }: ConfirmReceiptProps) {
+export function ConfirmReceipt({ dealId, amountUSDC, sellerWallet, onSuccess }: ConfirmReceiptProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [done, setDone] = useState(false)
   const [txId, setTxId] = useState('')
   const [confirmed, setConfirmed] = useState(false)
-  void appId
-  void buyerWallet
 
   async function handleConfirm() {
     if (!confirmed) return
@@ -41,11 +37,14 @@ export function ConfirmReceipt({ dealId, appId, amountUSDC, buyerWallet, sellerW
         throw new Error('Seller wallet address is missing. Cannot release funds.')
       }
 
-      const sorobanServer = new rpc.Server("https://soroban-testnet.stellar.org")
-      const server = new Horizon.Server("https://horizon-testnet.stellar.org")
+      const sorobanServer = new rpc.Server(process.env.NEXT_PUBLIC_STELLAR_RPC_URL || "https://soroban-testnet.stellar.org")
+      const server = new Horizon.Server(process.env.NEXT_PUBLIC_STELLAR_HORIZON_URL || "https://horizon-testnet.stellar.org")
       const userAccount = await server.loadAccount(address)
 
-      const contractId = process.env.NEXT_PUBLIC_STELLAR_CONTRACT_ID || "CD7P7SINFDFSHLBOGEBFMAJWPZC4CULFASS4JQF22YJ3LQVNNJRWV2HP"
+      const contractId = process.env.NEXT_PUBLIC_STELLAR_CONTRACT_ID
+      if (!contractId) {
+        throw new Error('NEXT_PUBLIC_STELLAR_CONTRACT_ID is not configured')
+      }
 
       // Buyer calls confirm_package() to approve and release USDC to the seller
       const confirmPackageOp = Operation.invokeHostFunction({
@@ -99,6 +98,7 @@ export function ConfirmReceipt({ dealId, appId, amountUSDC, buyerWallet, sellerW
       }
 
       const txHash = submitted.hash
+      setTxId(txHash)
       const status = 'COMPLETED'
       const chainNetwork = 'stellar'
       const updateRes = await fetch(`/api/deals/${dealId}`, {

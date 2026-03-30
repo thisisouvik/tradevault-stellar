@@ -1,5 +1,5 @@
 import { createHash } from 'crypto'
-import { Horizon, rpc, Address, nativeToScVal, xdr, TransactionBuilder, Operation, Networks, Keypair, Contract } from '@stellar/stellar-sdk'
+import { Horizon, rpc, Address, nativeToScVal, xdr, TransactionBuilder, Operation, Networks, Keypair } from '@stellar/stellar-sdk'
 
 export const STELLAR_RPC_URL = process.env.STELLAR_RPC_URL || 'https://soroban-testnet.stellar.org'
 export const STELLAR_CONTRACT_ID = process.env.STELLAR_CONTRACT_ID || ''
@@ -38,15 +38,21 @@ export async function callContractMethod(
   const account = await server.loadAccount(platformKeypair.publicKey())
 
   let xdrArgs: xdr.ScVal[] = []
+
   if (method === 'resolve_dispute') {
-    const [dealId, arbitratorAddress, buyerAmount, sellerAmount] = args
-    const dealSymbol = dealId.replace(/-/g, '').substring(0, 32)
+    const [sellerPct, buyerPct] = args
     xdrArgs = [
-      nativeToScVal(dealSymbol, { type: 'symbol' }),
-      new Address(arbitratorAddress || platformKeypair.publicKey()).toScVal(),
-      nativeToScVal(Math.floor(buyerAmount * 10000000), { type: 'i128' }),
-      nativeToScVal(Math.floor(sellerAmount * 10000000), { type: 'i128' })
+      nativeToScVal(Number(sellerPct), { type: 'u32' }),
+      nativeToScVal(Number(buyerPct), { type: 'u32' }),
     ]
+  } else if (method === 'submit_delivery' || method === 'raise_dispute') {
+    const [hashHex] = args
+    const normalized = String(hashHex || '').trim().toLowerCase()
+    if (!/^[a-f0-9]{64}$/.test(normalized)) {
+      throw new Error(`Invalid hash argument for ${method}; expected SHA256 hex string`)
+    }
+    const hashBytes = Buffer.from(normalized, 'hex')
+    xdrArgs = [xdr.ScVal.scvBytes(hashBytes)]
   }
 
   const op = Operation.invokeHostFunction({
@@ -112,7 +118,7 @@ export async function writeReputationNote(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ wallet, outcome, value, dealId, ts: Math.floor(Date.now() / 1000) }),
     })
-  } catch (error) {
-    console.error('Error writing Stellar reputation note:', error)
+  } catch {
+    // Silently fail if webhook is unreachable
   }
 }

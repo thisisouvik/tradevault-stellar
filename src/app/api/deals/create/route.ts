@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { sendEmail, emailTemplates } from '@/lib/email'
+import { validateCreateDealPayload } from '@/lib/apiValidators'
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,9 +18,16 @@ export async function POST(request: NextRequest) {
       contractId, onChainDealId,
     } = body
 
-    // Validation
-    if (!buyerEmail || !buyerWallet || !itemName || !amountUSDC) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    const validation = validateCreateDealPayload({
+      buyerEmail,
+      buyerWallet,
+      itemName,
+      amountUSDC,
+      deliveryDays,
+    })
+
+    if (!validation.ok) {
+      return NextResponse.json({ error: validation.error }, { status: 400 })
     }
 
     // Get seller profile
@@ -37,16 +45,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Please connect a wallet before creating a deal' }, { status: 400 })
     }
 
-    const parsedAmount = Number.parseInt(amountUSDC, 10)
-    const parsedDeliveryDays = Number.parseInt(deliveryDays, 10)
-
-    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      return NextResponse.json({ error: 'Invalid amountUSDC' }, { status: 400 })
-    }
-
-    if (!Number.isFinite(parsedDeliveryDays) || parsedDeliveryDays <= 0) {
-      return NextResponse.json({ error: 'Invalid deliveryDays' }, { status: 400 })
-    }
+    const parsedAmount = validation.amountUSDC
+    const parsedDeliveryDays = validation.deliveryDays
 
     // Insert deal — with graceful fallback if on_chain_deal_id column hasn't been
     // migrated yet (retries without it so the app never hard-fails on schema drift).

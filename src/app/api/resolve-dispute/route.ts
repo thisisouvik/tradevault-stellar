@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { callContractMethod } from '@/lib/stellar'
 import { sendEmail, emailTemplates } from '@/lib/email'
+import { isValidDisputeSplit } from '@/lib/apiValidators'
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
 
     const { dealId, sellerPct, buyerPct, notes } = await request.json()
 
-    if (sellerPct + buyerPct !== 100) {
+    if (!isValidDisputeSplit(sellerPct, buyerPct)) {
       return NextResponse.json({ error: 'Percentages must sum to 100' }, { status: 400 })
     }
 
@@ -45,6 +46,25 @@ export async function POST(request: NextRequest) {
     if (!deal) return NextResponse.json({ error: 'Deal not found' }, { status: 404 })
     if (deal.status !== 'DISPUTED') return NextResponse.json({ error: 'Deal must be in DISPUTED state' }, { status: 400 })
 
+    // Call resolve_dispute() on Stellar Soroban contract
+    const contractId = deal.contract_address || deal.contract_app_id
+    if (!contractId) {
+      return NextResponse.json({ error: 'Missing contract identifier for deal' }, { status: 400 })
+    }
+
+    try {
+      await callContractMethod(
+        'resolve_dispute',
+        [sellerPct, buyerPct],
+        String(contractId)
+      )
+    } catch (err: any) {
+      return NextResponse.json(
+        { error: err?.message || 'On-chain resolve_dispute failed' },
+        { status: 502 }
+      )
+    }
+
     // Save arbitration record
     const { error: arbError } = await admin.from('arbitration').insert({
       deal_id: dealId,
@@ -55,22 +75,6 @@ export async function POST(request: NextRequest) {
     })
 
     if (arbError) return NextResponse.json({ error: 'Failed to save arbitration' }, { status: 500 })
-
-    // Call resolve_dispute() on Stellar Soroban contract
-    const contractId = deal.contract_address || deal.contract_app_id
-    if (contractId) {
-      try {
-        const buyerAmount = deal.amount_usdc * (buyerPct / 100)
-        const sellerAmount = deal.amount_usdc * (sellerPct / 100)
-        await callContractMethod(
-          'resolve_dispute',
-          [dealId, actorProfile.wallet_address, buyerAmount, sellerAmount],
-          String(contractId)
-        )
-      } catch (err) {
-        console.warn('Stellar contract call failed (continuing):', err)
-      }
-    }
 
     // Update deal status
     await admin.from('deals').update({ status: 'RESOLVED' }).eq('id', dealId)
