@@ -47,6 +47,7 @@ body {
   font-family: var(--font-dm-sans, 'DM Sans', system-ui, sans-serif);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 /* Scrollbar */
@@ -137,4 +138,13 @@ h1, h2, h3, h4, h5, h6 {
 .section-fade-in-right.animate-in-view {
   opacity: 1;
   transform: translate(0, 0);
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

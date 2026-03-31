@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Shield, Scale, LayoutDashboard, LogOut, Search, Clock, AlertTriangle, CheckCircle, Package, ArrowRight, ExternalLink, User } from 'lucide-react'
+import { Shield, Scale, LayoutDashboard, LogOut, Search, Clock, AlertTriangle, CheckCircle, Package, ArrowRight, ExternalLink, User, Menu, X } from 'lucide-react'
 import { WalletConnect } from '@/components/WalletConnect'
 
 interface ArbitratorDashboardProps {
@@ -14,6 +14,7 @@ interface ArbitratorDashboardProps {
 
 export default function ArbitratorDashboardClient({ profile, activeDisputes, resolvedDisputes }: ArbitratorDashboardProps) {
   const [showResolved, setShowResolved] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Calculations
   const now = Date.now()
@@ -31,59 +32,87 @@ export default function ArbitratorDashboardClient({ profile, activeDisputes, res
   // Mock average resolution time: 28 hours (static for demonstration since we may not have full timestamps ready)
   const averageResolutionHours = 28
 
-  return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden text-slate-900 font-sans">
-      
-      {/* Clean Sidebar */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 z-20">
-        <div className="h-16 flex items-center px-6 border-b border-gray-100">
-          <Link href="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="TradeVault" className="w-6 h-6 object-contain" />
-            <span className="text-[#05445E] font-bold text-lg tracking-tight">TradeVault</span>
-          </Link>
-        </div>
+  const sidebarContent = (
+    <>
+      <div className="h-16 flex items-center px-6 border-b border-gray-100">
+        <Link href="/" className="flex items-center gap-2">
+          <img src="/logo.png" alt="TradeVault" className="w-6 h-6 object-contain" />
+          <span className="text-[#05445E] font-bold text-lg tracking-tight">TradeVault</span>
+        </Link>
+      </div>
 
-        <div className="px-6 py-5 border-b border-gray-100 bg-orange-50/30">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-sm border border-orange-200">
-              <Scale className="w-5 h-5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-900 truncate">{profile?.name || 'Arbitrator'}</p>
-              <p className="text-[10px] font-black uppercase tracking-widest text-orange-500 mt-0.5">Neutral Judge</p>
-            </div>
+      <div className="px-6 py-5 border-b border-gray-100 bg-orange-50/30">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-sm border border-orange-200">
+            <Scale className="w-5 h-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900 truncate">{profile?.name || 'Arbitrator'}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-orange-500 mt-0.5">Neutral Judge</p>
           </div>
         </div>
+      </div>
 
-        <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-          <Link href="/dashboard" className="flex items-center px-3 py-2 rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
-            <LayoutDashboard className="w-4 h-4 mr-3 flex-shrink-0 text-gray-400" />
-            <span className="text-sm">Account Overview</span>
-          </Link>
-          <Link href="/arbitrator" className="flex items-center px-3 py-2 rounded-md bg-[#F0F4F8] text-[#05445E] font-medium transition-colors">
-            <Scale className="w-4 h-4 mr-3 flex-shrink-0 text-[#05445E]" />
-            <span className="text-sm">Dispute Queue</span>
-            {activeDisputes.length > 0 && <span className="ml-auto bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full text-[10px] font-bold">{activeDisputes.length}</span>}
-          </Link>
-        </div>
+      <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+        <Link href="/dashboard" className="flex items-center px-3 py-2 rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">
+          <LayoutDashboard className="w-4 h-4 mr-3 flex-shrink-0 text-gray-400" />
+          <span className="text-sm">Account Overview</span>
+        </Link>
+        <Link href="/arbitrator" className="flex items-center px-3 py-2 rounded-md bg-[#F0F4F8] text-[#05445E] font-medium transition-colors">
+          <Scale className="w-4 h-4 mr-3 flex-shrink-0 text-[#05445E]" />
+          <span className="text-sm">Dispute Queue</span>
+          {activeDisputes.length > 0 && <span className="ml-auto bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full text-[10px] font-bold">{activeDisputes.length}</span>}
+        </Link>
+      </div>
 
-        <div className="p-4 border-t border-gray-200">
-          <form action="/api/auth/signout" method="post">
-            <button type="submit" className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-              <LogOut className="w-4 h-4 text-gray-400" />
-              Sign out
-            </button>
-          </form>
-        </div>
+      <div className="p-4 border-t border-gray-200">
+        <form action="/api/auth/signout" method="post">
+          <button type="submit" className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+            <LogOut className="w-4 h-4 text-gray-400" />
+            Sign out
+          </button>
+        </form>
+      </div>
+    </>
+  )
+
+  return (
+    <div className="flex h-dvh bg-gray-50 overflow-hidden text-slate-900 font-sans">
+      
+      {/* Clean Sidebar */}
+      <aside className="hidden md:flex w-64 bg-white border-r border-gray-200 flex-col flex-shrink-0 z-20">
+        {sidebarContent}
+      </aside>
+
+      {sidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close sidebar overlay"
+          className="fixed inset-0 z-30 bg-black/35 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      <aside className={`fixed left-0 top-0 z-40 h-full w-64 bg-white border-r border-gray-200 flex flex-col transition-transform duration-200 md:hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        {sidebarContent}
       </aside>
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-full overflow-hidden">
         {/* Top Navbar */}
-        <header className="h-16 flex items-center justify-between px-8 border-b border-gray-200 bg-white z-10">
-          <div>
+        <header className="h-16 flex items-center justify-between px-4 sm:px-8 border-b border-gray-200 bg-white z-10 gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(prev => !prev)}
+              className="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100"
+              aria-label="Toggle sidebar"
+            >
+              {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+            <div>
             <h1 className="text-lg font-extrabold text-[#05445E]">Dispute Queue</h1>
             <p className="text-xs text-gray-500 font-medium tracking-wide">Neutral conflict resolution terminal</p>
+            </div>
           </div>
 
           <div className="flex items-center gap-4">
@@ -91,11 +120,11 @@ export default function ArbitratorDashboardClient({ profile, activeDisputes, res
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-8">
-          <div className="max-w-5xl mx-auto space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8">
+          <div className="max-w-5xl mx-auto space-y-5 sm:space-y-6">
 
             {/* SEC A - Summary Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-orange-50 rounded-full blur-2xl" />
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Open Disputes</p>
@@ -174,7 +203,7 @@ export default function ArbitratorDashboardClient({ profile, activeDisputes, res
                     return (
                       <div key={deal.id} className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col md:flex-row">
                         <div className={`w-1.5 flex-shrink-0 ${hoursOpen > 48 ? 'bg-red-500' : 'bg-orange-400'}`} />
-                        <div className="p-5 flex-1 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                        <div className="p-4 sm:p-5 flex-1 grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 items-center">
                           
                           {/* Deal & Parties */}
                           <div className="md:col-span-5 space-y-3">
@@ -193,7 +222,7 @@ export default function ArbitratorDashboardClient({ profile, activeDisputes, res
                           </div>
 
                           {/* Status & Deadline */}
-                          <div className="md:col-span-4 border-l border-gray-100 pl-6 py-2">
+                          <div className="md:col-span-4 md:border-l border-gray-100 md:pl-6 py-1 sm:py-2">
                             <div className="flex items-center justify-between mb-3 text-xs">
                               <span className="font-bold text-gray-500 uppercase tracking-widest">Evidence</span>
                               <span className={`font-black uppercase ${hasBothEvidence ? 'text-green-500' : 'text-blue-500'}`}>

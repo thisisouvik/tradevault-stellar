@@ -99,7 +99,7 @@ export default function AboutPage() {
       <HoverGradientNavBar />
 
       {/* Hero */}
-      <section className="relative pt-32 pb-24 overflow-hidden bg-[#F7F9FC]">
+      <section className="relative pt-24 sm:pt-28 lg:pt-32 pb-16 sm:pb-20 lg:pb-24 overflow-hidden bg-[#F7F9FC]">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 right-0 w-[700px] h-[700px] rounded-full opacity-[0.05]"
             style={{ background: 'radial-gradient(circle, #189AB4, transparent)' }} />
@@ -117,7 +117,7 @@ export default function AboutPage() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-4xl md:text-6xl font-black text-[#05445E] leading-tight mb-6 tracking-tight max-w-4xl"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-[#05445E] leading-tight mb-5 sm:mb-6 tracking-tight max-w-4xl"
           >
             Peer-to-peer trade,{' '}
             <span className="text-[#189AB4]">secured by math — not middlemen.</span>
@@ -127,7 +127,7 @@ export default function AboutPage() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-[#3a7fa0] text-lg font-medium max-w-2xl leading-relaxed mb-10"
+            className="text-[#3a7fa0] text-base sm:text-lg font-medium max-w-2xl leading-relaxed mb-8 sm:mb-10"
           >
             TradeVault is a blockchain-native escrow platform built for the global economy. We eliminate the need for banks, payment processors, or blind trust in strangers — replacing them with cryptographically enforced smart contracts on Stellar.
           </motion.p>
@@ -149,8 +149,8 @@ export default function AboutPage() {
       </section>
 
       {/* Stats Row */}
-      <section className="bg-white border-y border-slate-100 py-12">
-        <div className="max-w-5xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+      <section className="bg-white border-y border-slate-100 py-10 sm:py-12">
+        <div className="max-w-5xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8 text-center">
           {[
             { value: '100%', label: 'On-Chain Contracts', icon: Shield },
             { value: '$0.001', label: 'Avg. Trade Fee', icon: Zap },
@@ -169,7 +169,7 @@ export default function AboutPage() {
                 <div className="w-10 h-10 rounded-xl bg-[#EAF6FB] flex items-center justify-center mb-1">
                   <Icon className="w-5 h-5 text-[#189AB4]" />
                 </div>
-                <p className="text-3xl font-black text-[#05445E]">{s.value}</p>
+                <p className="text-2xl sm:text-3xl font-black text-[#05445E]">{s.value}</p>
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{s.label}</p>
               </motion.div>
             )
@@ -178,15 +178,15 @@ export default function AboutPage() {
       </section>
 
       {/* Mission */}
-      <section className="py-24 bg-[#F7F9FC]">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-16 items-center">
+      <section className="py-16 sm:py-20 lg:py-24 bg-[#F7F9FC]">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
           <motion.div
             initial={{ opacity: 0, x: -24 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
           >
             <p className="text-xs font-bold uppercase tracking-widest text-[#189AB4] mb-4">Our Mission</p>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#05445E] mb-6 leading-tight">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#05445E] mb-5 sm:mb-6 leading-tight">
               Make international trade as safe as trading with a neighbor.
             </h2>
             <p className="text-[#3a7fa0] leading-relaxed font-medium mb-4">
@@ -229,9 +229,9 @@ export default function AboutPage() {
       </section>
 
       {/* Values */}
-      <section className="py-24 bg-white">
+      <section className="py-16 sm:py-20 lg:py-24 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
+          <div className="text-center mb-10 sm:mb-14">
             <p className="text-xs font-bold uppercase tracking-widest text-[#189AB4] mb-3">Core Values</p>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-[#05445E]">What we stand for</h2>
           </div>
@@ -260,9 +260,9 @@ export default function AboutPage() {
       </section>
 
       {/* Full Feature List */}
-      <section className="py-24 bg-[#F7F9FC]">
+      <section className="py-16 sm:py-20 lg:py-24 bg-[#F7F9FC]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
+          <div className="text-center mb-10 sm:mb-14">
             <p className="text-xs font-bold uppercase tracking-widest text-[#189AB4] mb-3">Platform Features</p>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-[#05445E]">
               Everything you need for{' '}
@@ -294,15 +294,15 @@ export default function AboutPage() {
       </section>
 
       {/* Timeline */}
-      <section className="py-24 bg-white">
+      <section className="py-16 sm:py-20 lg:py-24 bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
+          <div className="text-center mb-10 sm:mb-14">
             <p className="text-xs font-bold uppercase tracking-widest text-[#189AB4] mb-3">Our Journey</p>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-[#05445E]">Built in the open, shipped fast.</h2>
           </div>
           <div className="relative">
             <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#189AB4] to-[#D6EFF9]" />
-            <div className="space-y-8 pl-14">
+            <div className="space-y-6 sm:space-y-8 pl-10 sm:pl-14">
               {timeline.map((t, i) => (
                 <motion.div
                   key={t.year}

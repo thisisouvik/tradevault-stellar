@@ -99,7 +99,7 @@ const disputeFlow = [
 
 export function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="py-24 sm:py-32 relative overflow-hidden bg-white border-b border-[#189AB4]/10">
+    <section id="how-it-works" className="py-16 sm:py-24 lg:py-32 relative overflow-hidden bg-white border-b border-[#189AB4]/10">
 
       {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none">
@@ -112,7 +112,7 @@ export function HowItWorksSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
 
         {/* Header */}
-        <div className="text-center mb-20">
+        <div className="text-center mb-12 sm:mb-20">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -126,7 +126,7 @@ export function HowItWorksSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-4xl sm:text-5xl font-extrabold text-[#05445E] mb-5 leading-tight"
+            className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#05445E] mb-5 leading-tight"
           >
             From proposal to payment{' '}
             <span className="text-[#189AB4]">in 4 steps.</span>
@@ -136,7 +136,7 @@ export function HowItWorksSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="max-w-2xl mx-auto text-[#3a7fa0] text-lg leading-relaxed"
+            className="max-w-2xl mx-auto text-[#3a7fa0] text-base sm:text-lg leading-relaxed"
           >
             No banks. No wire transfers. No trust required. Every step is cryptographically verified and permanently recorded on the Stellar blockchain.
           </motion.p>
@@ -148,7 +148,7 @@ export function HowItWorksSection() {
           {/* Vertical connector line */}
           <div className="hidden sm:block absolute left-[27px] top-14 bottom-14 w-0.5 bg-gradient-to-b from-[#189AB4]/30 via-[#8B5CF6]/20 to-[#10B981]/30" />
 
-          <div className="space-y-5">
+          <div className="space-y-4 sm:space-y-5">
             {steps.map((step, i) => {
               const Icon = step.icon
               return (
@@ -158,7 +158,7 @@ export function HowItWorksSection() {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, margin: '-50px' }}
                   transition={{ duration: 0.5, delay: i * 0.1 }}
-                  className="relative flex flex-col sm:flex-row gap-5 items-start bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-[#189AB4]/30 transition-all group"
+                  className="relative flex flex-col sm:flex-row gap-4 sm:gap-5 items-start bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md hover:border-[#189AB4]/30 transition-all group"
                 >
                   {/* Step number circle */}
                   <div className="flex-shrink-0 relative z-10">
@@ -199,7 +199,7 @@ export function HowItWorksSection() {
                     {/* Title + icon */}
                     <div className="flex items-center gap-3 mb-2">
                       <Icon className="w-5 h-5 flex-shrink-0" style={{ color: step.accentColor }} />
-                      <h3 className="text-xl font-extrabold text-[#05445E]">{step.title}</h3>
+                      <h3 className="text-lg sm:text-xl font-extrabold text-[#05445E]">{step.title}</h3>
                     </div>
 
                     {/* Description */}
@@ -227,7 +227,7 @@ export function HowItWorksSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.2 }}
-          className="mt-20 max-w-5xl mx-auto"
+          className="mt-14 sm:mt-20 max-w-5xl mx-auto"
         >
           {/* Title */}
           <div className="text-center mb-10">

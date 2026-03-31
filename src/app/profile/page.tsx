@@ -68,67 +68,68 @@ export default async function ProfilePage() {
     <div className="min-h-screen bg-gray-50 text-slate-900 font-sans">
       {/* Header */}
       <header className="h-16 bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-4xl mx-auto h-full px-6 flex items-center justify-between">
+        <div className="max-w-4xl mx-auto h-full px-4 sm:px-6 flex items-center justify-between gap-2">
           <Link 
             href="/dashboard" 
-            className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+            className="flex items-center gap-2 text-xs sm:text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
+            <span className="hidden sm:inline">Back to Dashboard</span>
+            <span className="sm:hidden">Back</span>
           </Link>
 
           <Link href="/" className="flex items-center gap-2">
             <img src="/logo.png" alt="TradeVault" className="w-6 h-6 object-contain" />
             <span className="text-[#05445E] font-bold text-lg tracking-tight hidden sm:block">TradeVault</span>
           </Link>
-          <div className="w-[124px] hidden sm:block" />{/* Spacer to keep center alignment */}
+          <div className="w-[124px] hidden sm:block" />
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-12">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10 md:py-12">
 
         {/* Financial Metrics */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           
-          <div className="bg-white rounded-lg p-6 border border-gray-200 flex flex-col justify-center relative overflow-hidden">
+          <div className="bg-white rounded-lg p-4 sm:p-6 border border-gray-200 flex flex-col justify-center relative overflow-hidden">
             <div className="absolute top-0 right-0 w-24 h-24 bg-blue-100 rounded-full blur-3xl pointer-events-none" />
             <h2 className="text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">
               Wallet Balance
             </h2>
-            <p className="text-3xl font-bold text-[#05445E]">
+            <p className="text-2xl sm:text-3xl font-bold text-[#05445E] break-words">
               ${walletUsdc.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-sm font-medium text-gray-400">USDC</span>
             </p>
           </div>
 
-          <div className="bg-white rounded-lg p-6 border border-gray-200 flex flex-col justify-center relative overflow-hidden">
+          <div className="bg-white rounded-lg p-4 sm:p-6 border border-gray-200 flex flex-col justify-center relative overflow-hidden">
             <div className="absolute top-0 right-0 w-24 h-24 bg-amber-100 rounded-full blur-3xl pointer-events-none" />
             <h2 className="text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">
               {role === 'buyer' ? 'Locked in Escrow' : 'Pending Escrow Payout'}
             </h2>
-            <p className="text-3xl font-bold text-amber-500">
+            <p className="text-2xl sm:text-3xl font-bold text-amber-500 break-words">
               ${lockedEscrow.toLocaleString()} <span className="text-sm font-medium text-amber-500/50">USDC</span>
             </p>
           </div>
 
-          <div className="bg-white rounded-lg p-6 border border-gray-200 flex flex-col justify-center relative overflow-hidden">
+          <div className="bg-white rounded-lg p-4 sm:p-6 border border-gray-200 flex flex-col justify-center relative overflow-hidden">
             <div className="absolute top-0 right-0 w-24 h-24 bg-green-100 rounded-full blur-3xl pointer-events-none" />
             <h2 className="text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">
               Lifetime Volume
             </h2>
-            <p className="text-3xl font-bold text-[#10b981]">
+            <p className="text-2xl sm:text-3xl font-bold text-[#10b981] break-words">
               ${volume.toLocaleString()} <span className="text-sm font-medium text-green-500/50">USDC</span>
             </p>
           </div>
         </div>
 
         {/* Profile card */}
-        <div className="bg-white rounded-lg p-6 mb-8 border border-gray-200 flex items-center gap-6">
+        <div className="bg-white rounded-lg p-4 sm:p-6 mb-6 sm:mb-8 border border-gray-200 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
           <div className="w-16 h-16 rounded-full bg-[#F0F4F8] text-[#05445E] flex items-center justify-center border border-[#E1E8F0] shadow-sm flex-shrink-0">
             <span className="font-bold text-xl">{profile?.name?.charAt(0)?.toUpperCase() || '?'}</span>
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-3 flex-wrap mb-1">
-              <h1 className="text-2xl font-bold text-gray-900">{profile?.name}</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{profile?.name}</h1>
               <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold ${rc.bg}`}>
                 {rc.label}
               </span>
@@ -141,7 +142,7 @@ export default async function ProfilePage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           {[
             { label: 'Total Deals', value: allDeals.length, valueClass: 'text-gray-900' },
             { label: 'Completed', value: completed, valueClass: 'text-[#10b981]' },
@@ -155,7 +156,7 @@ export default async function ProfilePage() {
         </div>
 
         {/* Wallet section */}
-        <div className="bg-white rounded-lg p-6 mb-8 border border-gray-200">
+        <div className="bg-white rounded-lg p-4 sm:p-6 mb-6 sm:mb-8 border border-gray-200">
           <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
             Stellar Wallet Connection
           </h2>

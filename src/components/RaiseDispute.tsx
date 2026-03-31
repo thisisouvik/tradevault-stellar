@@ -8,11 +8,12 @@ import { Horizon, rpc, Address, nativeToScVal, xdr, TransactionBuilder, Operatio
 
 interface RaiseDisputeProps {
   dealId: string
-  onChainDealId?: number | null
+  contractId?: string | null
+  onChainDealId?: number | string | null
   onSuccess: () => void
 }
 
-export function RaiseDispute({ dealId, onChainDealId, onSuccess }: RaiseDisputeProps) {        
+export function RaiseDispute({ dealId, contractId, onChainDealId, onSuccess }: RaiseDisputeProps) {        
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [confirmed, setConfirmed] = useState(false)
@@ -33,12 +34,13 @@ export function RaiseDispute({ dealId, onChainDealId, onSuccess }: RaiseDisputeP
       const server = new Horizon.Server(process.env.NEXT_PUBLIC_STELLAR_HORIZON_URL || "https://horizon-testnet.stellar.org")
       const userAccount = await server.loadAccount(address)
 
-      const contractId = process.env.NEXT_PUBLIC_STELLAR_CONTRACT_ID
-      if (!contractId) {
-        throw new Error('NEXT_PUBLIC_STELLAR_CONTRACT_ID is not configured')
+      const resolvedContractId = contractId || process.env.NEXT_PUBLIC_STELLAR_CONTRACT_ID
+      if (!resolvedContractId) {
+        throw new Error('Deal contract ID is missing. Cannot raise dispute.')
       }
-      if (!onChainDealId) {
-        throw new Error('Missing on-chain deal id for this escrow')
+      const normalizedOnChainDealId = Number(onChainDealId)
+      if (!Number.isInteger(normalizedOnChainDealId) || normalizedOnChainDealId < 0) {
+        throw new Error('Missing or invalid on-chain deal id for this escrow. This deal may be from an older schema; recreate the deal after running on_chain_deal_id migration.')
       }
 
       const reasonSeed = `${dealId}:${address}:${Date.now()}`
@@ -48,9 +50,9 @@ export function RaiseDispute({ dealId, onChainDealId, onSuccess }: RaiseDisputeP
       const disputeOp = Operation.invokeHostFunction({
         func: xdr.HostFunction.hostFunctionTypeInvokeContract(
           new xdr.InvokeContractArgs({
-            contractAddress: new Address(contractId).toScAddress(),
+            contractAddress: new Address(resolvedContractId).toScAddress(),
             functionName: 'raise_dispute',
-            args: [nativeToScVal(onChainDealId, { type: 'u32' }), nativeToScVal(reasonHashBytes, { type: 'bytes' })]
+            args: [nativeToScVal(normalizedOnChainDealId, { type: 'u32' }), nativeToScVal(reasonHashBytes, { type: 'bytes' })]
           })
         ),
         auth: []

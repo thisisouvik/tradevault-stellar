@@ -95,7 +95,7 @@ function EvidenceColumn({
                   <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-2">
                     Attached Photos ({ev.photo_urls.length})
                   </p>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {ev.photo_urls.map((url: string, i: number) => (
                       <div
                         key={i}
@@ -163,13 +163,14 @@ export default function ArbitratorReviewClient({
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
 
       {/* Top Navbar */}
-      <header className="h-16 flex items-center justify-between px-8 border-b border-gray-200 bg-white sticky top-0 z-40 shadow-sm">
+      <header className="h-16 flex items-center justify-between px-4 sm:px-8 border-b border-gray-200 bg-white sticky top-0 z-40 shadow-sm gap-2 sm:gap-4">
         <Link
           href="/arbitrator"
-          className="flex items-center gap-2 text-gray-500 hover:text-[#05445E] transition-colors text-sm font-bold bg-gray-50 px-4 py-2 rounded-xl border border-gray-200 hover:border-[#189AB4]/30"
+          className="flex items-center gap-2 text-gray-500 hover:text-[#05445E] transition-colors text-xs sm:text-sm font-bold bg-gray-50 px-2.5 sm:px-4 py-2 rounded-xl border border-gray-200 hover:border-[#189AB4]/30"
         >
           <ArrowLeft className="w-4 h-4" />
-          Dispute Queue
+          <span className="hidden sm:inline">Dispute Queue</span>
+          <span className="sm:hidden">Queue</span>
         </Link>
 
         <Link href="/" className="flex items-center gap-2 relative z-10 transition-transform hover:scale-105 active:scale-95">
@@ -177,35 +178,35 @@ export default function ArbitratorReviewClient({
           <span className="text-[#05445E] font-extrabold text-xl tracking-wide hidden sm:block">TradeVault</span>
         </Link>
 
-        <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest bg-orange-50 text-orange-600 border border-orange-100 shadow-sm">
+        <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest bg-orange-50 text-orange-600 border border-orange-100 shadow-sm">
           <Scale className="w-3.5 h-3.5" />
           Arbitrator Terminal
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-8 space-y-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
 
         {/* Alert Banner */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 border-l-4 border-l-red-500 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+        <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200 border-l-4 border-l-red-500 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6 relative overflow-hidden">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 border border-red-200">
               <Shield className="w-6 h-6 text-red-500" />
             </div>
             <div>
-              <h1 className="text-xl font-black text-slate-900 mb-1">Contract Dispute: {deal.item_name}</h1>
+              <h1 className="text-lg sm:text-xl font-black text-slate-900 mb-1 break-words">Contract Dispute: {deal.item_name}</h1>
               <p className="text-sm font-bold text-gray-400 font-mono tracking-tight">ID: {deal.id.slice(0, 8).toUpperCase()}</p>
             </div>
           </div>
-          <div className="flex items-center gap-8 self-end md:self-auto">
+          <div className="flex items-center gap-4 sm:gap-8 self-start md:self-auto flex-wrap">
             <div className="text-right">
               <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">Frozen Funds</p>
-              <p className="text-2xl font-black text-rose-600">${deal.amount_usdc} USDC</p>
+              <p className="text-xl sm:text-2xl font-black text-rose-600">${deal.amount_usdc} USDC</p>
             </div>
             {appId && appId.length > 0 && (
               <a
                 href={`https://stellar.expert/explorer/testnet/contract/${appId}`}
                 target="_blank" rel="noopener noreferrer"
-                className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-4 py-2 flex items-center gap-2 rounded-xl text-xs font-bold transition-colors border border-blue-100 shadow-sm whitespace-nowrap"
+                className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 sm:px-4 py-2 flex items-center gap-2 rounded-xl text-xs font-bold transition-colors border border-blue-100 shadow-sm whitespace-nowrap"
               >
                 Verify on Stellar <ExternalLink className="w-3 h-3" />
               </a>
@@ -214,10 +215,10 @@ export default function ArbitratorReviewClient({
         </div>
 
         {/* Contract Terms + Shipping */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
 
           {/* Immutable Contract Terms */}
-          <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 h-fit">
+          <section className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200 h-fit">
             <h3 className="text-sm font-extrabold text-[#05445E] mb-5 flex items-center gap-2 border-b border-gray-100 pb-3">
               <FileText className="w-4 h-4 text-[#189AB4]" /> Immutable Contract Terms
             </h3>
@@ -259,7 +260,7 @@ export default function ArbitratorReviewClient({
           </section>
 
           {/* Shipping Evidence */}
-          <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 h-fit">
+          <section className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200 h-fit">
             <h3 className="text-sm font-extrabold text-[#05445E] mb-5 flex items-center gap-2 border-b border-gray-100 pb-3">
               <Package className="w-4 h-4 text-[#189AB4]" /> On-Chain Shipping Evidence
             </h3>
@@ -290,7 +291,7 @@ export default function ArbitratorReviewClient({
         </div>
 
         {/* ── EVIDENCE PANEL — always visible so arbitrator sees both sides ── */}
-        <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+        <section className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-200">
           <h3 className="text-base font-extrabold text-[#05445E] mb-2 flex items-center gap-2 border-b border-gray-100 pb-3">
             <Scale className="w-5 h-5 text-[#189AB4]" /> Claims &amp; Evidence — Both Sides
           </h3>
@@ -342,16 +343,16 @@ export default function ArbitratorReviewClient({
 
         {/* Post-Verdict Record — show when resolved */}
         {arbitration && (
-          <section className="bg-green-50 rounded-2xl p-8 shadow-sm border border-green-200">
+          <section className="bg-green-50 rounded-2xl p-4 sm:p-8 shadow-sm border border-green-200">
             <div className="flex items-center gap-3 mb-6">
               <CheckCircle2 className="w-8 h-8 text-green-600" />
-              <h2 className="text-2xl font-black text-green-900 tracking-tight">Verdict Finalized</h2>
+              <h2 className="text-xl sm:text-2xl font-black text-green-900 tracking-tight">Verdict Finalized</h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-6 rounded-xl border border-green-100 shadow-sm mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 bg-white p-4 sm:p-6 rounded-xl border border-green-100 shadow-sm mb-6">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Seller received</p>
-                <div className="text-4xl font-black text-green-600 mb-1">
+                <div className="text-3xl sm:text-4xl font-black text-green-600 mb-1">
                   {arbitration.seller_pct}%{' '}
                   <span className="text-xl text-gray-400 font-bold">
                     (${Math.floor(deal.amount_usdc * arbitration.seller_pct / 100)} USDC)
@@ -360,7 +361,7 @@ export default function ArbitratorReviewClient({
               </div>
               <div className="border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-6">
                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Buyer received</p>
-                <div className="text-4xl font-black text-blue-600 mb-1">
+                <div className="text-3xl sm:text-4xl font-black text-blue-600 mb-1">
                   {arbitration.buyer_pct}%{' '}
                   <span className="text-xl text-gray-400 font-bold">
                     (${Math.floor(deal.amount_usdc * arbitration.buyer_pct / 100)} USDC)

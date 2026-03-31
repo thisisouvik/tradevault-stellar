@@ -39,7 +39,7 @@ export default function RootLayout({
   assertProductionEnv()
 
   return (
-    <html lang="en" className={`${dmSans.variable} h-full antialiased`}>
+    <html lang="en" data-scroll-behavior="smooth" className={`${dmSans.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans bg-[#F0F2F5] text-[#6B7280]">
         <Providers>
           {children}

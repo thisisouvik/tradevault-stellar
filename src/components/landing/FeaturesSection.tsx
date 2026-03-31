@@ -65,10 +65,10 @@ const cardVariants = {
 
 export function FeaturesSection() {
   return (
-    <section id="features" className="py-24 sm:py-32 relative overflow-hidden bg-[#EAF6FB] border-b border-[#189AB4]/10">
+    <section id="features" className="py-16 sm:py-24 lg:py-32 relative overflow-hidden bg-[#EAF6FB] border-b border-[#189AB4]/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-12 sm:mb-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -82,7 +82,7 @@ export function FeaturesSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-4xl sm:text-5xl font-bold text-[#05445E] mb-4"
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#05445E] mb-4"
           >
             Built differently.{' '}
             <span className="text-[#189AB4]">Secured by math.</span>
@@ -92,7 +92,7 @@ export function FeaturesSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="max-w-xl mx-auto text-[#3a7fa0] text-lg"
+            className="max-w-xl mx-auto text-[#3a7fa0] text-base sm:text-lg"
           >
             Every safeguard is enforced by the Stellar smart contract runtime — not by policy, not by trust in us.
           </motion.p>
@@ -104,7 +104,7 @@ export function FeaturesSection() {
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: '-50px' }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
         >
           {features.map(feature => {
             const Icon = feature.icon
@@ -113,19 +113,19 @@ export function FeaturesSection() {
                 key={feature.title}
                 variants={cardVariants}
                 whileHover={{ y: -4, transition: { duration: 0.2 } }}
-                className="group relative rounded-2xl p-8 cursor-default bg-white border border-[#189AB4]/15 shadow-sm hover:shadow-md transition-all"
+                className="group relative rounded-2xl p-5 sm:p-8 cursor-default bg-white border border-[#189AB4]/15 shadow-sm hover:shadow-md transition-all"
               >
                 <div
                   className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
                   style={{ background: feature.bg }}
                 />
                 <div
-                  className="relative w-12 h-12 rounded-xl flex items-center justify-center mb-6"
+                  className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mb-4 sm:mb-6"
                   style={{ background: feature.bg, border: `1px solid ${feature.color}25` }}
                 >
                   <Icon className="w-6 h-6" style={{ color: feature.color }} />
                 </div>
-                <h3 className="relative text-lg font-bold text-[#05445E] mb-3">{feature.title}</h3>
+                <h3 className="relative text-base sm:text-lg font-bold text-[#05445E] mb-3">{feature.title}</h3>
                 <p className="relative text-sm text-[#3a7fa0] leading-relaxed">{feature.description}</p>
               </motion.div>
             )
