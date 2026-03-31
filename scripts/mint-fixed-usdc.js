@@ -1,13 +1,4 @@
-select
-  id,
-  status,
-  on_chain_deal_id,
-  trim(on_chain_deal_id) as trimmed_id,
-  on_chain_deal_id ~ '^[0-9]+$' as is_numeric,
-  contract_app_id,
-  contract_address
-from deals
-where id = 'YOUR_DEAL_ID';#!/usr/bin/env node
+#!/usr/bin/env node
 
 const { Keypair, TransactionBuilder, Asset, Operation, Networks, Account } = require('@stellar/stellar-sdk')
 
