@@ -20,7 +20,7 @@ interface DealDetailClientProps {
     buyer_email: string
     delivery_days: number
     dispute_window_days: number
-    on_chain_deal_id?: number | null
+    on_chain_deal_id?: number | string | null
     contract_app_id?: string
     contract_address?: string
     tracking_id?: string
@@ -59,6 +59,7 @@ export function DealDetailClient({
   }
 
   const appId = deal.contract_app_id || deal.contract_address || ''
+  const resolvedOnChainDealId = deal.on_chain_deal_id != null ? Number(deal.on_chain_deal_id) : null
 
   return (
     <div className="space-y-6">
@@ -136,7 +137,7 @@ export function DealDetailClient({
                 dealId={deal.id}
                 amountUSDC={deal.amount_usdc}
                 sellerWallet={deal.seller_wallet}
-                onChainDealId={deal.on_chain_deal_id}
+                onChainDealId={resolvedOnChainDealId}
                 onSuccess={refresh}
               />
             </div>
@@ -216,12 +217,12 @@ export function DealDetailClient({
                     dealId={deal.id}
                     amountUSDC={deal.amount_usdc}
                     sellerWallet={deal.seller_wallet}
-                    onChainDealId={deal.on_chain_deal_id}
+                    onChainDealId={resolvedOnChainDealId}
                     onSuccess={refresh}
                   />
                   <RaiseDispute
                     dealId={deal.id}
-                    onChainDealId={deal.on_chain_deal_id}
+                    onChainDealId={resolvedOnChainDealId}
                     onSuccess={refresh}
                   />
                 </div>
