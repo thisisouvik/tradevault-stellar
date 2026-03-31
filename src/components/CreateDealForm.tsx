@@ -27,6 +27,7 @@ export default function CreateDealForm() {
   const [error, setError] = useState('')
   const [txId, setTxId] = useState('')
   const [appId, setAppId] = useState('')
+  const [onChainDealId, setOnChainDealId] = useState<number | null>(null)
   const [connectingWallet, setConnectingWallet] = useState(false)
 
   async function connectBuyerWallet() {
@@ -100,20 +101,33 @@ export default function CreateDealForm() {
         throw new Error('Please connect your Wallet from the dashboard first.')
       }
 
-      const configuredContractId = process.env.NEXT_PUBLIC_STELLAR_CONTRACT_ID || ''
-      if (!configuredContractId) {
-        throw new Error('NEXT_PUBLIC_STELLAR_CONTRACT_ID is missing. Please set it in env.')
+      // 3. Deploy NEW contract for this deal
+      console.log('Deploying new contract for deal...')
+      const deployRes = await fetch('/api/stellar/deploy-contract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sellerAddress: sellerStellarAddress })
+      })
+
+      if (!deployRes.ok) {
+        const errData = await deployRes.json()
+        throw new Error(`Contract deployment failed: ${errData.error}`)
       }
 
-      setAppId(configuredContractId)
+      const { contractId: deployedContractId, deploymentHash } = await deployRes.json()
+      if (!deployedContractId) {
+        throw new Error('Contract deployment did not return contract ID')
+      }
 
-      // 3. Initialize Soroban Contract over testnet
+      console.log('✓ Contract deployed:', deployedContractId)
+      setAppId(deployedContractId)
+
+      // 4. Get USDC contract ID
       const _server = new Horizon.Server("https://horizon-testnet.stellar.org")
       const sorobanServer = new rpc.Server("https://soroban-testnet.stellar.org")
       const sellerAccount = await _server.loadAccount(sellerStellarAddress)
 
       const usdcBalance = sellerAccount.balances.find((b: any) => b.asset_type !== 'native' && b.asset_code === 'USDC') as any
-      // Fallback to a syntactically valid public key if user doesn't have a USDC trustline
       const validMockIssuer = 'GBZUDOB2YZRVPQCBODPBXO2T3ASGWMH26BBYT34OWQJUC5LKXMBLZUYK'
       const usdcIssuer = usdcBalance?.asset_issuer || validMockIssuer
       let usdcContractId;
@@ -122,24 +136,27 @@ export default function CreateDealForm() {
         const usdcAsset = new Asset('USDC', usdcIssuer)
         usdcContractId = usdcAsset.contractId(Networks.TESTNET)
       } catch (err) {
-        // Fallback directly to the public testnet USDC token contract if Asset throws
         usdcContractId = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC' 
       }
 
-      // Contract entrypoint: create_deal(seller, buyer, arbitrator, token, amount, delivery_days, dispute_days)
+      // 5. Call create_deal on the NEWLY deployed contract
+      console.log('Initializing deal on deployed contract...')
+      const generatedDealId = Date.now() >>> 0
+
       const createOp = Operation.invokeHostFunction({
         func: xdr.HostFunction.hostFunctionTypeInvokeContract(
           new xdr.InvokeContractArgs({
-            contractAddress: new Address(configuredContractId).toScAddress(),
+            contractAddress: new Address(deployedContractId).toScAddress(),
             functionName: 'create_deal',
             args: [
-              nativeToScVal(sellerStellarAddress, { type: 'address' }),            // seller: Address
-              nativeToScVal(form.buyerWallet.trim(), { type: 'address' }),         // buyer: Address
-              nativeToScVal(form.arbitratorWallet.trim(), { type: 'address' }),    // arbitrator: Address
-              nativeToScVal(usdcContractId, { type: 'address' }),                  // token: Address (USDC)
-              nativeToScVal(BigInt(amount) * BigInt(10_000_000), { type: 'i128' }), // amount: i128 (stroops)
-              nativeToScVal(Number(form.deliveryDays), { type: 'u32' }),           // delivery_days: u32
-              nativeToScVal(7, { type: 'u32' })                                    // dispute_days: u32
+              nativeToScVal(generatedDealId, { type: 'u32' }),
+              nativeToScVal(sellerStellarAddress, { type: 'address' }),
+              nativeToScVal(form.buyerWallet.trim(), { type: 'address' }),
+              nativeToScVal(form.arbitratorWallet.trim(), { type: 'address' }),
+              nativeToScVal(usdcContractId, { type: 'address' }),
+              nativeToScVal(BigInt(amount) * BigInt(10_000_000), { type: 'i128' }),
+              nativeToScVal(Number(form.deliveryDays), { type: 'u32' }),
+              nativeToScVal(7, { type: 'u32' })
             ]
           })
         ),
@@ -148,6 +165,8 @@ export default function CreateDealForm() {
 
       let txPayment = new TransactionBuilder(sellerAccount, { fee: "100000", networkPassphrase: Networks.TESTNET })
         .addOperation(createOp).setTimeout(30).build()
+
+      let createdDealId: number | null = null
 
       const sim = await sorobanServer.simulateTransaction(txPayment)
       if (rpc.Api.isSimulationError(sim)) {
@@ -172,9 +191,15 @@ export default function CreateDealForm() {
           throw new Error('On-chain initialization failed')
         }
         setTxId(submitted.hash)
+
+        // Avoid decoding returnValue here because some SDK/runtime combinations
+        // can throw "Bad union switch: 4" when method retval is scvU32.
+        createdDealId = generatedDealId
+        console.log('✓ Deal created on-chain. Local deal reference:', createdDealId)
+        setOnChainDealId(createdDealId)
       }
 
-      // Save to Supabase
+      // Save to Supabase with the contract ID and on-chain deal ID
       const res = await fetch('/api/deals/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -187,8 +212,9 @@ export default function CreateDealForm() {
           amountUSDC: amount,
           deliveryDays: parseInt(form.deliveryDays),
           disputeWindowDays: parseInt(form.disputeWindowDays),
-          contractAppId: configuredContractId,
-          contractAddress: configuredContractId,
+          contractAppId: deployedContractId,
+          contractAddress: deployedContractId,
+          onChainDealId: createdDealId,
           arbitratorWallet: form.arbitratorWallet.trim(),
           arbitrator: 'default',
         }),

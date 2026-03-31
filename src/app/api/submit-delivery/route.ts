@@ -43,12 +43,15 @@ export async function POST(request: NextRequest) {
     if (!contractId) {
       return NextResponse.json({ error: 'Missing contract identifier for deal' }, { status: 400 })
     }
+    if (!deal.on_chain_deal_id) {
+      return NextResponse.json({ error: 'Missing on-chain deal id for this deal' }, { status: 400 })
+    }
 
     let txId: string
     try {
       txId = await callContractMethod(
         'submit_delivery',
-        [trackingHash],
+        [deal.on_chain_deal_id, trackingHash],
         String(contractId)
       )
     } catch (err: any) {

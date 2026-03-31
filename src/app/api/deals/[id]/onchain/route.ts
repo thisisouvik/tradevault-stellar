@@ -22,7 +22,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     const { data: deal } = await supabase
       .from('deals')
-      .select('id, seller_id, buyer_email, buyer_wallet, status, contract_address, contract_app_id')
+      .select('id, seller_id, buyer_email, buyer_wallet, status, contract_address, contract_app_id, on_chain_deal_id')
       .eq('id', id)
       .single()
 
@@ -47,6 +47,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     if (!contractId) {
       return NextResponse.json({ error: 'Missing contract identifier for deal' }, { status: 400 })
     }
+    if (!deal.on_chain_deal_id) {
+      return NextResponse.json({ error: 'Missing on-chain deal id for this deal' }, { status: 400 })
+    }
 
     const resolvedAction = resolveOnchainAction(action, deal.status)
     if (!resolvedAction) {
@@ -64,11 +67,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     const method = resolvedAction.method
     const status = resolvedAction.nextStatus
-    let args: unknown[] = []
+    let args: unknown[] = [deal.on_chain_deal_id]
 
     if (action === 'dispute') {
       const reasonHash = await sha256(`dispute:${deal.id}:${user.id}:${Date.now()}`)
-      args = [reasonHash]
+      args = [deal.on_chain_deal_id, reasonHash]
     }
 
     const txHash = await callContractMethod(method, args, String(contractId))

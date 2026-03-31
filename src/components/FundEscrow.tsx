@@ -5,16 +5,17 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Wallet, Zap, AlertCircle, CheckCircle2, ExternalLink } from 'lucide-react'
 
 import { isAllowed, setAllowed, getAddress, signTransaction } from '@stellar/freighter-api'
-import { Horizon, rpc, Address, xdr, TransactionBuilder, Operation, Networks } from '@stellar/stellar-sdk'
+import { Horizon, rpc, Address, xdr, nativeToScVal, TransactionBuilder, Operation, Networks } from '@stellar/stellar-sdk'
 
 interface FundEscrowProps {
   dealId: string
   amountUSDC: number
   sellerWallet: string
+  onChainDealId?: number | null
   onSuccess: () => void
 }
 
-export function FundEscrow({ dealId, amountUSDC, sellerWallet, onSuccess }: FundEscrowProps) {
+export function FundEscrow({ dealId, amountUSDC, sellerWallet, onChainDealId, onSuccess }: FundEscrowProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [txId, setTxId] = useState('')
@@ -45,12 +46,15 @@ export function FundEscrow({ dealId, amountUSDC, sellerWallet, onSuccess }: Fund
       if (!contractId) {
         throw new Error('NEXT_PUBLIC_STELLAR_CONTRACT_ID is not configured')
       }
+      if (!onChainDealId) {
+        throw new Error('Missing on-chain deal id for this escrow')
+      }
       const acceptOp = Operation.invokeHostFunction({
         func: xdr.HostFunction.hostFunctionTypeInvokeContract(
           new xdr.InvokeContractArgs({
             contractAddress: new Address(contractId).toScAddress(),
             functionName: 'accept_deal',
-            args: []
+            args: [nativeToScVal(onChainDealId, { type: 'u32' })]
           })
         ),
         auth: []
@@ -62,7 +66,7 @@ export function FundEscrow({ dealId, amountUSDC, sellerWallet, onSuccess }: Fund
           new xdr.InvokeContractArgs({
             contractAddress: new Address(contractId).toScAddress(),
             functionName: 'fund_deal',
-            args: []
+            args: [nativeToScVal(onChainDealId, { type: 'u32' })]
           })
         ),
         auth: []

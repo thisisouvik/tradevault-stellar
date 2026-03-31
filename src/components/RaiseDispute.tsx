@@ -8,10 +8,11 @@ import { Horizon, rpc, Address, nativeToScVal, xdr, TransactionBuilder, Operatio
 
 interface RaiseDisputeProps {
   dealId: string
+  onChainDealId?: number | null
   onSuccess: () => void
 }
 
-export function RaiseDispute({ dealId, onSuccess }: RaiseDisputeProps) {        
+export function RaiseDispute({ dealId, onChainDealId, onSuccess }: RaiseDisputeProps) {        
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [confirmed, setConfirmed] = useState(false)
@@ -36,6 +37,9 @@ export function RaiseDispute({ dealId, onSuccess }: RaiseDisputeProps) {
       if (!contractId) {
         throw new Error('NEXT_PUBLIC_STELLAR_CONTRACT_ID is not configured')
       }
+      if (!onChainDealId) {
+        throw new Error('Missing on-chain deal id for this escrow')
+      }
 
       const reasonSeed = `${dealId}:${address}:${Date.now()}`
       const reasonDigest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(reasonSeed))
@@ -46,7 +50,7 @@ export function RaiseDispute({ dealId, onSuccess }: RaiseDisputeProps) {
           new xdr.InvokeContractArgs({
             contractAddress: new Address(contractId).toScAddress(),
             functionName: 'raise_dispute',
-            args: [nativeToScVal(reasonHashBytes, { type: 'bytes' })]
+            args: [nativeToScVal(onChainDealId, { type: 'u32' }), nativeToScVal(reasonHashBytes, { type: 'bytes' })]
           })
         ),
         auth: []
