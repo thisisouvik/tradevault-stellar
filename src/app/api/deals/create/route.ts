@@ -55,6 +55,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing contract identifier' }, { status: 400 })
     }
 
+    if (onChainDealId === undefined || onChainDealId === null || `${onChainDealId}`.trim() === '') {
+      return NextResponse.json({ error: 'Missing on-chain deal id from contract creation' }, { status: 400 })
+    }
+
     // Insert deal — with graceful fallback if on_chain_deal_id column hasn't been
     // migrated yet (retries without it so the app never hard-fails on schema drift).
     const basePayload = {
@@ -72,20 +76,17 @@ export async function POST(request: NextRequest) {
       contract_address: resolvedContract,
     }
 
-    let { data: deal, error } = await supabase
+    const { data: deal, error } = await supabase
       .from('deals')
-      .insert({ ...basePayload, on_chain_deal_id: onChainDealId || null })
+      .insert({ ...basePayload, on_chain_deal_id: String(onChainDealId) })
       .select()
       .single()
 
-    // If the column doesn't exist yet (migration pending), retry without it
     if (error?.message?.includes('on_chain_deal_id') || error?.code === '42703') {
-      console.warn('on_chain_deal_id column missing — retrying without it. Run migration SQL.')
-      ;({ data: deal, error } = await supabase
-        .from('deals')
-        .insert(basePayload)
-        .select()
-        .single())
+      return NextResponse.json(
+        { error: 'Database is missing on_chain_deal_id column. Run supabase/add_on_chain_deal_id_migration.sql and retry.' },
+        { status: 500 }
+      )
     }
 
     if (error || !deal) {

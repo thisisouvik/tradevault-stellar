@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -29,6 +30,16 @@ async function getDeal(id: string) {
     .single()
   if (error || !data) return null
   return data
+}
+
+async function getSellerProfile(sellerId: string) {
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from('profiles')
+    .select('name, email, wallet_address')
+    .eq('id', sellerId)
+    .single()
+  return data || null
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; description: string }> = {
@@ -73,9 +84,9 @@ export default async function DealPage({ params }: PageProps) {
     : { data: null }
 
   const dealLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/deal/${id}`
-  const seller = deal.profiles as { name: string; email: string; wallet_address?: string }
-
-  // Use the nested profile relationship data directly instead of performing a secondary query
+  const fallbackSeller = deal.profiles as { name?: string; email?: string; wallet_address?: string } | null
+  const sellerProfile = await getSellerProfile(deal.seller_id)
+  const seller = sellerProfile || fallbackSeller || { name: 'Seller', email: '', wallet_address: '' }
   const sellerWallet = seller?.wallet_address || ''
 
   return (
