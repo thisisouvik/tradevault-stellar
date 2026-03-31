@@ -55,26 +55,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing contract identifier' }, { status: 400 })
     }
 
-    // Safety guard: current deployed contract is single-instance.
-    // Prevent creating multiple DB deals against the same contract.
-    const { data: existingDeal, error: existingDealError } = await supabase
-      .from('deals')
-      .select('id, contract_app_id, contract_address')
-      .or(`contract_app_id.eq.${resolvedContract},contract_address.eq.${resolvedContract}`)
-      .limit(1)
-      .maybeSingle()
-
-    if (existingDealError) {
-      return NextResponse.json({ error: 'Failed to validate contract availability' }, { status: 500 })
-    }
-
-    if (existingDeal) {
-      return NextResponse.json(
-        { error: 'Configured contract is already initialized for another deal. Deploy or configure a fresh contract ID before creating a new deal.' },
-        { status: 409 }
-      )
-    }
-
     // Insert deal — with graceful fallback if on_chain_deal_id column hasn't been
     // migrated yet (retries without it so the app never hard-fails on schema drift).
     const basePayload = {

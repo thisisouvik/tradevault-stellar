@@ -57,11 +57,14 @@ export async function POST(request: NextRequest) {
     if (!contractId) {
       return NextResponse.json({ error: 'Missing contract identifier for deal' }, { status: 400 })
     }
+    if (!deal.on_chain_deal_id) {
+      return NextResponse.json({ error: 'Missing on-chain deal id for this deal' }, { status: 400 })
+    }
 
     try {
       await callContractMethod(
         'resolve_dispute',
-        [sellerPct, buyerPct],
+        [deal.on_chain_deal_id, sellerPct, buyerPct],
         String(contractId)
       )
     } catch (err: any) {

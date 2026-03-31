@@ -45,20 +45,33 @@ export async function callContractMethod(
 
   let xdrArgs: xdr.ScVal[] = []
 
-  if (method === 'resolve_dispute') {
-    const [sellerPct, buyerPct] = args
+  if (method === 'accept_deal' || method === 'fund_deal' || method === 'confirm_package' || method === 'timeout_release') {
+    const [dealId] = args
+    if (!Number.isInteger(Number(dealId)) || Number(dealId) < 0) {
+      throw new Error(`${method} requires a valid deal id`)
+    }
+    xdrArgs = [nativeToScVal(Number(dealId), { type: 'u32' })]
+  } else if (method === 'resolve_dispute') {
+    const [dealId, sellerPct, buyerPct] = args
+    if (!Number.isInteger(Number(dealId)) || Number(dealId) < 0) {
+      throw new Error('resolve_dispute requires a valid deal id')
+    }
     xdrArgs = [
+      nativeToScVal(Number(dealId), { type: 'u32' }),
       nativeToScVal(Number(sellerPct), { type: 'u32' }),
       nativeToScVal(Number(buyerPct), { type: 'u32' }),
     ]
   } else if (method === 'submit_delivery' || method === 'raise_dispute') {
-    const [hashHex] = args
+    const [dealId, hashHex] = args
+    if (!Number.isInteger(Number(dealId)) || Number(dealId) < 0) {
+      throw new Error(`${method} requires a valid deal id`)
+    }
     const normalized = String(hashHex || '').trim().toLowerCase()
     if (!/^[a-f0-9]{64}$/.test(normalized)) {
       throw new Error(`Invalid hash argument for ${method}; expected SHA256 hex string`)
     }
     const hashBytes = Buffer.from(normalized, 'hex')
-    xdrArgs = [xdr.ScVal.scvBytes(hashBytes)]
+    xdrArgs = [nativeToScVal(Number(dealId), { type: 'u32' }), xdr.ScVal.scvBytes(hashBytes)]
   }
 
   const op = Operation.invokeHostFunction({

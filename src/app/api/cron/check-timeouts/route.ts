@@ -36,8 +36,8 @@ export async function GET(request: NextRequest) {
     try {
       // Call timeout_release() on Stellar Soroban contract
       const contractId = deal.contract_address || deal.contract_app_id
-      if (contractId) {
-        await callContractMethod('timeout_release', [], String(contractId))
+      if (contractId && deal.on_chain_deal_id) {
+        await callContractMethod('timeout_release', [deal.on_chain_deal_id], String(contractId))
       }
 
       // Update DB

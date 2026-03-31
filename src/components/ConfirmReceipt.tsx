@@ -4,16 +4,17 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react'
 import { isAllowed, setAllowed, getAddress, signTransaction } from '@stellar/freighter-api'
-import { Horizon, rpc, Address, xdr, TransactionBuilder, Operation, Networks } from '@stellar/stellar-sdk'
+import { Horizon, rpc, Address, xdr, nativeToScVal, TransactionBuilder, Operation, Networks } from '@stellar/stellar-sdk'
 
 interface ConfirmReceiptProps {
   dealId: string
   amountUSDC: number
   sellerWallet: string
+  onChainDealId?: number | null
   onSuccess: () => void
 }
 
-export function ConfirmReceipt({ dealId, amountUSDC, sellerWallet, onSuccess }: ConfirmReceiptProps) {
+export function ConfirmReceipt({ dealId, amountUSDC, sellerWallet, onChainDealId, onSuccess }: ConfirmReceiptProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [done, setDone] = useState(false)
@@ -45,6 +46,9 @@ export function ConfirmReceipt({ dealId, amountUSDC, sellerWallet, onSuccess }: 
       if (!contractId) {
         throw new Error('NEXT_PUBLIC_STELLAR_CONTRACT_ID is not configured')
       }
+      if (!onChainDealId) {
+        throw new Error('Missing on-chain deal id for this escrow')
+      }
 
       // Buyer calls confirm_package() to approve and release USDC to the seller
       const confirmPackageOp = Operation.invokeHostFunction({
@@ -52,7 +56,7 @@ export function ConfirmReceipt({ dealId, amountUSDC, sellerWallet, onSuccess }: 
           new xdr.InvokeContractArgs({
             contractAddress: new Address(contractId).toScAddress(),
             functionName: 'confirm_package',
-            args: []
+            args: [nativeToScVal(onChainDealId, { type: 'u32' })]
           })
         ),
         auth: []
