@@ -29,15 +29,16 @@ export default async function NewDealPage() {
       <div className="min-h-screen bg-gray-50 text-slate-900 font-sans flex flex-col">
       {/* Header */}
       <header className="h-16 bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-[1200px] mx-auto h-full px-6 flex items-center justify-between">
+        <div className="max-w-[1200px] mx-auto h-full px-4 sm:px-6 flex items-center justify-between gap-2 sm:gap-3">
           
           <div className="w-1/3 flex justify-start">
             <Link
               href="/dashboard"
-              className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+              className="flex items-center gap-2 text-xs sm:text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               <span className="hidden sm:inline">Back to Dashboard</span>
+              <span className="sm:hidden">Back</span>
             </Link>
           </div>
 
@@ -55,9 +56,9 @@ export default async function NewDealPage() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-[1200px] w-full mx-auto px-6 py-10">
+      <main className="flex-1 max-w-[1200px] w-full mx-auto px-4 sm:px-6 py-6 sm:py-10">
         {/* Title */}
-        <div className="mb-8 max-w-2xl">
+        <div className="mb-6 sm:mb-8 max-w-2xl">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Create new contract</h1>
           <p className="text-gray-500 text-sm">
             Fill in the trade terms below. Once deployed, all terms are locked securely on the Stellar blockchain and cannot be modified.

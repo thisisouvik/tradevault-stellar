@@ -10,7 +10,7 @@ import {
   LayoutDashboard, FileText, Settings, HelpCircle,
   MoreHorizontal, Plus, Scale, Package, ShoppingBag,
   Star, AlertTriangle, CheckCircle, Verified, LogOut,
-  ChevronRight, ExternalLink, Filter, Copy, ArrowRight, User, Clock
+  ChevronRight, ExternalLink, Filter, Copy, ArrowRight, User, Clock, Menu, X
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -47,6 +47,7 @@ export default function DashboardClient({ user, profile, deals }: DashboardClien
   const [filter, setFilter] = useState<'ALL' | 'PROPOSED' | 'FUNDED' | 'DELIVERED' | 'COMPLETED' | 'DISPUTED' | 'ACTIVE'>('ALL')
   const [searchQuery, setSearchQuery] = useState('')
   const [showNotifications, setShowNotifications] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Computations
   const totalVolume = deals
@@ -115,67 +116,92 @@ export default function DashboardClient({ user, profile, deals }: DashboardClien
           { href: '/profile', label: 'Reputation & Settings', icon: User },
         ]
 
+  const sidebarContent = (
+    <>
+      <div className="h-16 flex items-center px-6 border-b border-gray-100">
+        <Link href="/" className="flex items-center gap-2">
+          <img src="/logo.png" alt="TradeVault" className="w-6 h-6 object-contain" />
+          <span className="text-[#05445E] font-bold text-lg tracking-tight">TradeVault</span>
+        </Link>
+      </div>
+
+      <div className="px-6 py-5 border-b border-gray-100">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-[#F0F4F8] flex items-center justify-center text-[#05445E] font-bold text-sm border border-[#E1E8F0]">
+            {profile?.name?.charAt(0)?.toUpperCase()}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900 truncate">{profile?.name || 'User'}</p>
+            <p className="text-xs text-gray-500 capitalize">{role}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+        {navLinks.map(link => (
+           <Link
+             key={link.href}
+             href={link.href}
+             className={`flex items-center px-3 py-2 rounded-md transition-colors ${
+               link.active
+                 ? 'bg-[#F0F4F8] text-[#05445E] font-medium'
+                 : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+             }`}
+           >
+             <link.icon className={`w-4 h-4 mr-3 flex-shrink-0 ${link.active ? 'text-[#05445E]' : 'text-gray-400'}`} />
+             <span className="text-sm">{link.label}</span>
+           </Link>
+        ))}
+      </div>
+
+      <div className="p-4 border-t border-gray-200">
+        <form action="/api/auth/signout" method="post">
+          <button type="submit" className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+            <LogOut className="w-4 h-4 text-gray-400" />
+            Sign out
+          </button>
+        </form>
+      </div>
+    </>
+  )
+
   return (
     <>
       <WalletRequiredModal isOpen={!hasWallet} />
-      <div className="flex h-screen bg-gray-50 overflow-hidden text-slate-900 font-sans">
+      <div className="flex h-dvh bg-gray-50 overflow-hidden text-slate-900 font-sans">
       
       {/* CLEAN SIDEBAR */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0 z-20">
-        <div className="h-16 flex items-center px-6 border-b border-gray-100">
-          <Link href="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="TradeVault" className="w-6 h-6 object-contain" />
-            <span className="text-[#05445E] font-bold text-lg tracking-tight">TradeVault</span>
-          </Link>
-        </div>
+      <aside className="hidden md:flex w-64 bg-white border-r border-gray-200 flex-col flex-shrink-0 z-20">
+        {sidebarContent}
+      </aside>
 
-        {/* User Compact View */}
-        <div className="px-6 py-5 border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-[#F0F4F8] flex items-center justify-center text-[#05445E] font-bold text-sm border border-[#E1E8F0]">
-              {profile?.name?.charAt(0)?.toUpperCase()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-900 truncate">{profile?.name || 'User'}</p>
-              <p className="text-xs text-gray-500 capitalize">{role}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Navigation list */}
-        <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-          {navLinks.map(link => (
-             <Link
-               key={link.href}
-               href={link.href}
-               className={`flex items-center px-3 py-2 rounded-md transition-colors ${
-                 link.active
-                   ? 'bg-[#F0F4F8] text-[#05445E] font-medium'
-                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-               }`}
-             >
-               <link.icon className={`w-4 h-4 mr-3 flex-shrink-0 ${link.active ? 'text-[#05445E]' : 'text-gray-400'}`} />
-               <span className="text-sm">{link.label}</span>
-             </Link>
-          ))}
-        </div>
-
-        {/* Logout area */}
-        <div className="p-4 border-t border-gray-200">
-          <form action="/api/auth/signout" method="post">
-            <button type="submit" className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-              <LogOut className="w-4 h-4 text-gray-400" />
-              Sign out
-            </button>
-          </form>
-        </div>
+      {sidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close sidebar overlay"
+          className="fixed inset-0 z-30 bg-black/35 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      <aside className={`fixed left-0 top-0 z-40 h-full w-64 bg-white border-r border-gray-200 flex flex-col transition-transform duration-200 md:hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        {sidebarContent}
       </aside>
 
       {/* MAIN CONTENT DASHBOARD */}
       <main className="flex-1 flex flex-col h-full overflow-hidden">
         {/* Top Bar Navigation */}
-        <header className="h-16 flex items-center justify-between px-8 border-b border-gray-200 bg-white z-10">
-          <div className="relative w-96">
+        <header className="h-16 flex items-center justify-between px-4 sm:px-8 border-b border-gray-200 bg-white z-10 gap-3">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(prev => !prev)}
+              className="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100"
+              aria-label="Toggle sidebar"
+            >
+              {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+            <h1 className="sm:hidden text-sm font-bold text-[#05445E]">Dashboard</h1>
+          <div className="relative hidden sm:block w-full max-w-xs lg:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
@@ -185,8 +211,9 @@ export default function DashboardClient({ user, profile, deals }: DashboardClien
               className="w-full bg-gray-50 text-sm text-gray-900 rounded-md pl-9 pr-4 py-2 outline-none focus:ring-1 focus:ring-[#189AB4] border border-transparent focus:border-[#189AB4] transition-all placeholder:text-gray-400"
             />
           </div>
+          </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <WalletConnect />
             
             <div className="relative">
@@ -247,17 +274,17 @@ export default function DashboardClient({ user, profile, deals }: DashboardClien
             {role === 'seller' && (
               <Link
                 href="/deal/new"
-                className="bg-[#05445E] hover:bg-[#043346] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+                className="bg-[#05445E] hover:bg-[#043346] text-white px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors flex items-center gap-1.5 sm:gap-2"
               >
                 <Plus className="w-4 h-4" />
-                New Deal
+                <span className="hidden sm:inline">New Deal</span>
               </Link>
             )}
           </div>
         </header>
 
         {/* DASHBOARD CONTENT */}
-        <div className="flex-1 overflow-y-auto p-8">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8">
           {!hasWallet ? (
             <div className="flex flex-col items-center justify-center h-full text-center max-w-md mx-auto">
               <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6 border border-gray-200 shadow-sm">
@@ -272,10 +299,10 @@ export default function DashboardClient({ user, profile, deals }: DashboardClien
               </div>
             </div>
           ) : (
-            <div className="max-w-6xl mx-auto space-y-8">
+            <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
 
               {/* SEC A - Top Stats Bar */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 <div className="bg-white rounded-lg p-5 border border-gray-200">
                   <p className="text-sm font-medium text-gray-500 mb-1">{role === 'buyer' ? 'Total Deals Participated' : 'Total Deals Created'}</p>
                   <h3 className="text-2xl font-bold text-gray-900">{deals.length}</h3>
@@ -304,7 +331,7 @@ export default function DashboardClient({ user, profile, deals }: DashboardClien
               </div>
 
               {/* SEC B - On-Chain Reputation Banner */}
-              <div className="bg-white rounded-lg border border-gray-200 p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <Shield className="w-5 h-5 text-[#189AB4]" />
@@ -316,16 +343,16 @@ export default function DashboardClient({ user, profile, deals }: DashboardClien
                       : 'Your trading history is publicly verified on the Stellar blockchain, establishing immutable trust.'}
                   </p>
                 </div>
-                <div className="flex gap-8 text-center md:text-left divide-x divide-gray-100">
-                  <div className="pl-4">
+                <div className="flex flex-wrap gap-4 sm:gap-8 text-left sm:text-center md:text-left sm:divide-x sm:divide-gray-100">
+                  <div className="sm:pl-4">
                     <p className="text-xl font-bold text-gray-900">{completedDealsCount}</p>
                     <p className="text-xs font-medium text-gray-500 uppercase tracking-widest mt-1">Impeccable</p>
                   </div>
-                  <div className="pl-8">
+                  <div className="sm:pl-8">
                     <p className="text-xl font-bold text-gray-900">{disputedDeals.length}</p>
                     <p className="text-xs font-medium text-gray-500 uppercase tracking-widest mt-1">Disputes</p>
                   </div>
-                  <div className="pl-8">
+                  <div className="sm:pl-8">
                     <p className="text-xl font-bold text-gray-900">${totalVolume.toLocaleString()}</p>
                     <p className="text-xs font-medium text-gray-500 uppercase tracking-widest mt-1">Volume</p>
                   </div>
@@ -339,7 +366,7 @@ export default function DashboardClient({ user, profile, deals }: DashboardClien
                 
                 {/* Filter Tabs */}
                 <div className="border-b border-gray-200 bg-gray-50/50 px-4">
-                  <nav className="-mb-px flex gap-6" aria-label="Tabs">
+                  <nav className="-mb-px flex gap-2 sm:gap-4 overflow-x-auto scrollbar-hide pb-1" aria-label="Tabs">
                     {['ALL', 'PROPOSED', 'FUNDED', 'DELIVERED', 'COMPLETED', 'DISPUTED'].map((tab) => {
                       const count = tab === 'ALL' ? deals.length : deals.filter(d => d.status === tab).length;
                       const isActive = filter === tab;
@@ -347,14 +374,14 @@ export default function DashboardClient({ user, profile, deals }: DashboardClien
                         <button
                           key={tab}
                           onClick={() => setFilter(tab as any)}
-                          className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+                          className={`whitespace-nowrap py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm flex items-center gap-2 flex-shrink-0 ${
                             isActive
                               ? 'border-[#05445E] text-[#05445E]'
                               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                           }`}
                         >
                           {tab}
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                          <span className={`hidden sm:inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
                             isActive ? 'bg-[#F0F4F8] text-[#05445E]' : 'bg-gray-100 text-gray-600'
                           }`}>
                             {count}

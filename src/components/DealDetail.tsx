@@ -59,7 +59,11 @@ export function DealDetailClient({
   }
 
   const appId = deal.contract_app_id || deal.contract_address || ''
-  const resolvedOnChainDealId = deal.on_chain_deal_id != null ? Number(deal.on_chain_deal_id) : null
+  const rawOnChainDealId = typeof deal.on_chain_deal_id === 'string' ? deal.on_chain_deal_id.trim() : deal.on_chain_deal_id
+  const parsedOnChainDealId = rawOnChainDealId != null && rawOnChainDealId !== '' ? Number(rawOnChainDealId) : null
+  const resolvedOnChainDealId = parsedOnChainDealId != null && Number.isInteger(parsedOnChainDealId) && parsedOnChainDealId > 0
+    ? parsedOnChainDealId
+    : null
 
   return (
     <div className="space-y-6">
@@ -137,6 +141,8 @@ export function DealDetailClient({
                 dealId={deal.id}
                 amountUSDC={deal.amount_usdc}
                 sellerWallet={deal.seller_wallet}
+                buyerWallet={deal.buyer_wallet}
+                contractId={appId}
                 onChainDealId={resolvedOnChainDealId}
                 onSuccess={refresh}
               />
@@ -217,11 +223,13 @@ export function DealDetailClient({
                     dealId={deal.id}
                     amountUSDC={deal.amount_usdc}
                     sellerWallet={deal.seller_wallet}
+                    contractId={appId}
                     onChainDealId={resolvedOnChainDealId}
                     onSuccess={refresh}
                   />
                   <RaiseDispute
                     dealId={deal.id}
+                    contractId={appId}
                     onChainDealId={resolvedOnChainDealId}
                     onSuccess={refresh}
                   />

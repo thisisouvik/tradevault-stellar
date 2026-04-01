@@ -10,11 +10,12 @@ interface ConfirmReceiptProps {
   dealId: string
   amountUSDC: number
   sellerWallet: string
-  onChainDealId?: number | null
+  contractId?: string | null
+  onChainDealId?: number | string | null
   onSuccess: () => void
 }
 
-export function ConfirmReceipt({ dealId, amountUSDC, sellerWallet, onChainDealId, onSuccess }: ConfirmReceiptProps) {
+export function ConfirmReceipt({ dealId, amountUSDC, sellerWallet, contractId, onChainDealId, onSuccess }: ConfirmReceiptProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [done, setDone] = useState(false)
@@ -42,21 +43,22 @@ export function ConfirmReceipt({ dealId, amountUSDC, sellerWallet, onChainDealId
       const server = new Horizon.Server(process.env.NEXT_PUBLIC_STELLAR_HORIZON_URL || "https://horizon-testnet.stellar.org")
       const userAccount = await server.loadAccount(address)
 
-      const contractId = process.env.NEXT_PUBLIC_STELLAR_CONTRACT_ID
-      if (!contractId) {
-        throw new Error('NEXT_PUBLIC_STELLAR_CONTRACT_ID is not configured')
+      const resolvedContractId = contractId || process.env.NEXT_PUBLIC_STELLAR_CONTRACT_ID
+      if (!resolvedContractId) {
+        throw new Error('Deal contract ID is missing. Cannot confirm receipt.')
       }
-      if (!onChainDealId) {
-        throw new Error('Missing on-chain deal id for this escrow')
+      const normalizedOnChainDealId = Number(onChainDealId)
+      if (!Number.isInteger(normalizedOnChainDealId) || normalizedOnChainDealId < 0) {
+        throw new Error('Missing or invalid on-chain deal id for this escrow. This deal may be from an older schema; recreate the deal after running on_chain_deal_id migration.')
       }
 
       // Buyer calls confirm_package() to approve and release USDC to the seller
       const confirmPackageOp = Operation.invokeHostFunction({
         func: xdr.HostFunction.hostFunctionTypeInvokeContract(
           new xdr.InvokeContractArgs({
-            contractAddress: new Address(contractId).toScAddress(),
+            contractAddress: new Address(resolvedContractId).toScAddress(),
             functionName: 'confirm_package',
-            args: [nativeToScVal(onChainDealId, { type: 'u32' })]
+            args: [nativeToScVal(normalizedOnChainDealId, { type: 'u32' })]
           })
         ),
         auth: []

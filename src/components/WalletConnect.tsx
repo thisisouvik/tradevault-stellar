@@ -124,9 +124,9 @@ export function WalletConnect({ onConnect, showBalance = true }: WalletConnectPr
   // Already connected view
   if (mounted && walletAddress) {
     return (
-      <div className="flex items-center gap-3 px-3 py-2 rounded-xl" style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)' }}>
+      <div className="flex items-center gap-2 sm:gap-3 px-2.5 sm:px-3 py-2 rounded-xl min-w-0" style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.2)' }}>
         {showBalance && (
-          <div className="flex items-center gap-2 pr-3 border-r border-[#4ade80]/20">
+          <div className="hidden sm:flex items-center gap-2 pr-3 border-r border-[#4ade80]/20">
             <div className="flex flex-col text-[10px] sm:text-xs">
               <span className="text-[#05445E] font-semibold">{balances.xlm} XLM</span>
               <span className="text-slate-500 font-medium">{balances.usdc} USDC</span>
@@ -134,8 +134,8 @@ export function WalletConnect({ onConnect, showBalance = true }: WalletConnectPr
           </div>
         )}
         <div className="w-2 h-2 rounded-full bg-[#4ade80] animate-pulse" />     
-        <span className="text-sm font-mono text-[#4ade80] font-medium">{shortAddr(walletAddress)}</span>
-        <div className="flex items-center gap-1 ml-1">
+        <span className="text-xs sm:text-sm font-mono text-[#4ade80] font-medium truncate max-w-[88px] sm:max-w-none">{shortAddr(walletAddress)}</span>
+        <div className="flex items-center gap-1 ml-0.5 sm:ml-1">
           <button onClick={copyAddress} className="p-1.5 rounded-lg text-[#8ca0b3] hover:text-[#4ade80] hover:bg-[#4ade80]/10 transition-colors" title="Copy address">
             {copied ? <CheckCheck className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
           </button>
@@ -154,7 +154,7 @@ export function WalletConnect({ onConnect, showBalance = true }: WalletConnectPr
         onClick={() => setShowModal(true)}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-all shadow-md hover:shadow-xl"
+        className="flex items-center gap-2 px-3 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-white transition-all shadow-md hover:shadow-xl"
         style={{ background: 'linear-gradient(135deg, #189AB4, #05445E)' }}
       >
         <Wallet className="w-4 h-4" />
@@ -178,10 +178,10 @@ export function WalletConnect({ onConnect, showBalance = true }: WalletConnectPr
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-white w-full max-w-sm rounded-3xl shadow-2xl relative z-10 overflow-hidden"
+              className="bg-white w-full max-w-sm mx-3 sm:mx-0 rounded-2xl sm:rounded-3xl shadow-2xl relative z-10 overflow-hidden"
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-5 border-b border-slate-100">
+              <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-100">
                 <h3 className="font-bold text-lg text-[#05445E]">
                   Connect Wallet
                 </h3>
@@ -194,7 +194,7 @@ export function WalletConnect({ onConnect, showBalance = true }: WalletConnectPr
               </div>
 
               {/* Body */}
-              <div className="p-6">
+              <div className="p-4 sm:p-6">
                 {error && (
                   <div className="mb-4 p-3 bg-red-50 text-red-700 text-xs font-medium rounded-xl border border-red-100">
                     {error}
@@ -204,10 +204,10 @@ export function WalletConnect({ onConnect, showBalance = true }: WalletConnectPr
                 <div className="space-y-3">
                   <button
                     onClick={handleFreighterConnect}
-                    className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-slate-100 hover:border-[#189AB4] hover:bg-teal-50/30 transition-all group text-left"
+                    className="w-full flex items-center gap-3 sm:gap-4 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-slate-100 hover:border-[#189AB4] hover:bg-teal-50/30 transition-all group text-left"
                   >
-                    <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-[#189AB4] group-hover:text-white transition-colors text-[#05445E]">
-                      <Monitor className="w-6 h-6" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-[#189AB4] group-hover:text-white transition-colors text-[#05445E]">
+                      <Monitor className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
                     <div>
                         <div className="font-bold text-slate-900 group-hover:text-[#05445E] transition-colors">

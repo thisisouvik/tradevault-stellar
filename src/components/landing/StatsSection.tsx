@@ -39,7 +39,7 @@ function AnimatedNumber({ value, suffix = '', prefix = '', decimals = 0 }: {
 
 export function StatsSection() {
   return (
-    <section className="relative py-20 overflow-hidden">
+    <section className="relative py-14 sm:py-20 overflow-hidden">
       {/* Background with feedbackBG.svg */}
       <div className="absolute inset-0 z-0">
         <img src="/feedbackBG.svg" alt="Background" className="w-full h-full object-cover" />
@@ -51,14 +51,14 @@ export function StatsSection() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="rounded-3xl p-8 sm:p-12 bg-white/10 backdrop-blur-sm border border-white/20 shadow-xl"
+            className="rounded-2xl sm:rounded-3xl p-5 sm:p-8 lg:p-12 bg-white/10 backdrop-blur-sm border border-white/20 shadow-xl"
         >
-          <div className="text-center mb-10">
+          <div className="text-center mb-6 sm:mb-10">
             <p className="text-[#DDF2FD] text-sm font-semibold uppercase tracking-widest">
               Platform Stats — TestNet
             </p>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-8">
             {stats.map((stat, i) => (
               <motion.div
                 key={stat.label}
@@ -68,10 +68,10 @@ export function StatsSection() {
                 transition={{ delay: i * 0.1 }}
                 className="text-center"
               >
-                <div className="text-4xl sm:text-5xl font-bold mb-2 tabular-nums" style={{ color: stat.color === '#05445E' ? '#DDF2FD' : stat.color }}>
+                <div className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-2 tabular-nums" style={{ color: stat.color === '#05445E' ? '#DDF2FD' : stat.color }}>
                   <AnimatedNumber value={stat.value} suffix={stat.suffix} prefix={stat.prefix} decimals={stat.decimals} />
                 </div>
-                <p className="text-sm text-[#DDF2FD]/80 font-medium">{stat.label}</p>
+                <p className="text-xs sm:text-sm text-[#DDF2FD]/80 font-medium">{stat.label}</p>
               </motion.div>
             ))}
           </div>

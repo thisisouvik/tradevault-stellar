@@ -40,6 +40,60 @@ TradeVault is flexible enough to handle almost any peer-to-peer transaction:
 3. **Physical Goods Delivery:** Purchasing a luxury watch from an international seller. The funds are locked up until the buyer confirms the tracking number shows "Delivered" and the item is authentic.
 4. **Over-The-Counter (OTC) Crypto Trades:** Large buyers and sellers exchanging tokens without trusting a centralized exchange to hold custody.
 
+## 🖼️ Product Screenshots
+
+The following screenshots are sourced directly from your `public` folder and mapped to the real user journey.
+
+### Landing & Discovery
+
+<p align="center">
+   <img src="public/hero-section.png" alt="TradeVault hero section" width="900" />
+</p>
+
+<p align="center">
+   <img src="public/why-tradevault.png" alt="Why TradeVault section" width="900" />
+</p>
+
+### Authentication
+
+<p align="center">
+   <img src="public/signin-illustration.png" alt="Sign in page illustration layout" width="900" />
+</p>
+
+<p align="center">
+   <img src="public/signin.svg" alt="Sign in visual asset" width="700" />
+</p>
+
+### Seller Flow
+
+<p align="center">
+   <img src="public/seller-dashboard.png" alt="Seller dashboard" width="900" />
+</p>
+
+<p align="center">
+   <img src="public/create-new-contact.png" alt="Create new contract flow" width="900" />
+</p>
+
+<p align="center">
+   <img src="public/seller-profile.png" alt="Seller profile page" width="900" />
+</p>
+
+### Buyer Flow
+
+<p align="center">
+   <img src="public/buyer-dashboard.png" alt="Buyer dashboard" width="900" />
+</p>
+
+<p align="center">
+   <img src="public/buyer-deal-review.png" alt="Buyer deal review page" width="900" />
+</p>
+
+### Test Proof
+
+<p align="center">
+   <img src="public/test_case.png" alt="Test case pass screenshot" width="900" />
+</p>
+
 ## 📊 Market Analysis: Traditional vs. Decentralized Escrow
 
 **Major Inefficiencies in the Traditional Escrow Market:**
@@ -145,10 +199,10 @@ The TradeVault escrow system has been fully migrated to Stellar's Soroban archit
 
 | Field       | Value                                                                                                                                  |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Contract ID | `CDOBGVI7DZVYDHQJ42I6TQOCP3CBJ7YZKMZVJHHP6Y666SFG64KUXYPD`                                                                             |
+| Contract ID | `CC63ARQGPSKCJ7KBAD3MLJWFUSIPDB4MZIKOHDQLPJDGVL7H6K2NT6DG`                                                                             |
 | Network     | Stellar Testnet                                                                                                                        |
 | Language    | Rust                                                                                                           |
-| Explorer    | [stellar.expert → contract](https://stellar.expert/explorer/testnet/contract/CDOBGVI7DZVYDHQJ42I6TQOCP3CBJ7YZKMZVJHHP6Y666SFG64KUXYPD) |
+| Explorer    | [stellar.expert → contract](https://stellar.expert/explorer/testnet/contract/CC63ARQGPSKCJ7KBAD3MLJWFUSIPDB4MZIKOHDQLPJDGVL7H6K2NT6DG) |
 | Last Redeploy Source | `settlex-deployer` |
 | Last Redeploy Command | `npm run stellar:contract:deploy -- --wasm ./contract/target/wasm32v1-none/release/tradevault_escrow.wasm --source settlex-deployer --network testnet` |
 
@@ -191,7 +245,7 @@ Current Level 2 completion status is tracked against concrete code and runtime e
 | Requirement | Status | Evidence |
 | --- | --- | --- |
 | 3+ error types handled | ✅ Complete | Contract panics + API validation + wallet/auth + network failures |
-| Contract deployed on Stellar testnet | ✅ Complete | Contract: [stellar.expert contract](https://stellar.expert/explorer/testnet/contract/CDOBGVI7DZVYDHQJ42I6TQOCP3CBJ7YZKMZVJHHP6Y666SFG64KUXYPD) |
+| Contract deployed on Stellar testnet | ✅ Complete | Contract: [stellar.expert contract](https://stellar.expert/explorer/testnet/contract/CC63ARQGPSKCJ7KBAD3MLJWFUSIPDB4MZIKOHDQLPJDGVL7H6K2NT6DG) |
 | Contract called from frontend | ✅ Complete | Buyer and dispute flows call deployed Soroban methods |
 | Transaction status visible to users | ✅ Complete | Status persisted via API route and displayed in UI flow |
 | 2+ meaningful commits | ✅ Complete | Repository history contains multiple feature/fix commits |
@@ -288,8 +342,8 @@ tradevault/
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    STELLAR_PLATFORM_SECRET=your_trusted_backend_signer_secret
    NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
-    NEXT_PUBLIC_STELLAR_CONTRACT_ID=CDOBGVI7DZVYDHQJ42I6TQOCP3CBJ7YZKMZVJHHP6Y666SFG64KUXYPD
-    STELLAR_CONTRACT_ID=CDOBGVI7DZVYDHQJ42I6TQOCP3CBJ7YZKMZVJHHP6Y666SFG64KUXYPD
+   NEXT_PUBLIC_STELLAR_CONTRACT_ID=CC63ARQGPSKCJ7KBAD3MLJWFUSIPDB4MZIKOHDQLPJDGVL7H6K2NT6DG
+   STELLAR_CONTRACT_ID=CC63ARQGPSKCJ7KBAD3MLJWFUSIPDB4MZIKOHDQLPJDGVL7H6K2NT6DG
    ```
 
 4. **Apply database migration SQL (required before production use):**

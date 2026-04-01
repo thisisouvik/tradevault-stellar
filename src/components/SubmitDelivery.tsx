@@ -195,7 +195,7 @@ export function SubmitDelivery({ dealId, onSuccess }: SubmitDeliveryProps) {
         )}
 
         {images.length > 0 && (
-          <div className="grid grid-cols-3 gap-2 mt-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3">
             {images.map((file, idx) => (
               <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-gray-200">
                 <img 

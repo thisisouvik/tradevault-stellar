@@ -12,12 +12,12 @@ const logos = [
 
 export function PartnersSection() {
   return (
-    <section className="py-12 relative overflow-hidden bg-white border-b border-[#189AB4]/10">
+    <section className="py-10 sm:py-12 relative overflow-hidden bg-white border-b border-[#189AB4]/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <p className="text-center text-xs font-semibold uppercase tracking-widest text-[#189AB4] mb-8">
+        <p className="text-center text-xs font-semibold uppercase tracking-widest text-[#189AB4] mb-6 sm:mb-8">
           Powered by
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10">
+        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 md:gap-10">
           {logos.map((logo, i) => (
             <motion.div
               key={logo.name}
@@ -25,7 +25,7 @@ export function PartnersSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.07 }}
-              className="px-5 py-2.5 rounded-xl text-sm font-bold tracking-wide"
+              className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold tracking-wide"
               style={{
                 background: `${logo.color}10`,
                 border: `1px solid ${logo.color}25`,

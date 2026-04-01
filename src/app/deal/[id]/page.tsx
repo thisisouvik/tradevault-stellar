@@ -93,15 +93,16 @@ export default async function DealPage({ params }: PageProps) {
     <div className="min-h-screen bg-[#F7F9FC] text-slate-800 font-sans">
 
       {/* Header */}
-      <header className="h-20 bg-white flex items-center justify-between px-8 border-b border-slate-200 sticky top-0 z-40 shadow-sm relative overflow-hidden">
+      <header className="h-auto min-h-16 sm:min-h-20 bg-white flex items-center justify-between px-3 sm:px-6 lg:px-8 py-3 sm:py-0 border-b border-slate-200 sticky top-0 z-40 shadow-sm relative overflow-hidden gap-2 sm:gap-4">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#189AB4] to-[#05445E]" />
         
         <Link 
           href="/dashboard" 
-          className="flex items-center gap-2 text-slate-500 hover:text-[#05445E] transition-colors text-sm font-bold bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 hover:border-[#189AB4]/30"
+          className="flex items-center gap-1.5 sm:gap-2 text-slate-500 hover:text-[#05445E] transition-colors text-xs sm:text-sm font-bold bg-slate-50 px-2.5 sm:px-4 py-2 rounded-xl border border-slate-200 hover:border-[#189AB4]/30"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Dashboard
+          <span className="hidden sm:inline">Back to Dashboard</span>
+          <span className="sm:hidden">Back</span>
         </Link>
         
         <Link href="/" className="flex items-center gap-2 relative z-10 transition-transform hover:scale-105 active:scale-95">
@@ -109,43 +110,45 @@ export default async function DealPage({ params }: PageProps) {
           <span className="text-[#05445E] font-extrabold text-xl tracking-wide hidden sm:block">TradeVault</span>
         </Link>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
           {isArbitrator && deal.status === 'DISPUTED' && (
             <Link
               href={`/arbitrator/${id}`}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold bg-orange-50 text-orange-600 hover:bg-orange-100 transition-colors shadow-sm"
+              className="flex items-center gap-1.5 px-2.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-orange-50 text-orange-600 hover:bg-orange-100 transition-colors shadow-sm"
             >
               <Scale className="w-4 h-4" />
-              Arbitration Room
+              <span className="hidden sm:inline">Arbitration Room</span>
+              <span className="sm:hidden">Room</span>
             </Link>
           )}
           {deal.contract_app_id && (
             <a
               href={`https://stellar.expert/explorer/testnet/contract/${deal.contract_app_id}`}
               target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors border border-blue-100 shadow-sm"
+              className="flex items-center gap-1.5 px-2.5 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors border border-blue-100 shadow-sm"
             >
-              On-Chain Contract
+              <span className="hidden sm:inline">On-Chain Contract</span>
+              <span className="sm:hidden">Contract</span>
               <ExternalLink className="w-4 h-4" />
             </a>
           )}
         </div>
       </header>
 
-      <main className="max-w-[1000px] mx-auto px-6 py-8">
+      <main className="max-w-[1000px] mx-auto px-4 sm:px-6 py-5 sm:py-8">
 
         {/* Status Banner */}
         <div
-          className="bg-white rounded-2xl p-5 mb-8 flex items-center gap-4 shadow-sm border border-slate-200"
+          className="bg-white rounded-2xl p-4 sm:p-5 mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 shadow-sm border border-slate-200"
           style={{ borderLeft: `6px solid ${status.color}` }}
         >
           <div className="w-4 h-4 rounded-full flex-shrink-0 animate-pulse shadow-sm shadow-[currentColor]/50" style={{ background: status.color }} />
           <div className="flex-1">
             <span className="text-sm font-black uppercase tracking-widest" style={{ color: status.color }}>{status.label}</span>
-            <span className="text-sm text-slate-500 ml-3 font-semibold">{status.description}</span>
+            <span className="block sm:inline text-xs sm:text-sm text-slate-500 sm:ml-3 font-semibold">{status.description}</span>
           </div>
           {/* Role tag */}
-          <span className={`text-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-lg border shadow-sm ${
+          <span className={`text-[10px] sm:text-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-lg border shadow-sm self-start sm:self-auto ${
             isSeller ? 'bg-green-50 text-green-700 border-green-200'
             : isBuyer ? 'bg-blue-50 text-blue-700 border-blue-200'
             : 'bg-orange-50 text-orange-700 border-orange-200'
@@ -155,21 +158,21 @@ export default async function DealPage({ params }: PageProps) {
         </div>
 
         {/* Contract overview */}
-        <div className="bg-white rounded-2xl p-8 mb-8 shadow-sm border border-slate-200">
+        <div className="bg-white rounded-2xl p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8 shadow-sm border border-slate-200">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-8 gap-4">
             <div>
-              <h1 className="text-3xl font-extrabold text-[#05445E] mb-2">{deal.item_name}</h1>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#05445E] mb-2 break-words">{deal.item_name}</h1>
               {deal.item_description && (
                 <p className="text-slate-500 text-sm leading-relaxed max-w-2xl font-medium">{deal.item_description}</p>
               )}
             </div>
             <div className="text-right flex-shrink-0">
-              <span className="text-3xl font-black text-green-600 tracking-tight">${deal.amount_usdc}</span>
+              <span className="text-2xl sm:text-3xl font-black text-green-600 tracking-tight">${deal.amount_usdc}</span>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">USDC Escrow</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-slate-50 p-6 rounded-xl border border-slate-100">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 bg-slate-50 p-4 sm:p-6 rounded-xl border border-slate-100">
             {[
               { icon: DollarSign, label: 'Asset', value: 'USDC', color: '#10B981' },
               { icon: Clock, label: 'Ship Within', value: `${deal.delivery_days} Days`, color: '#189AB4' },
@@ -181,15 +184,15 @@ export default async function DealPage({ params }: PageProps) {
                   <item.icon className="w-3.5 h-3.5" style={{ color: item.color }} />
                   <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{item.label}</p>
                 </div>
-                <p className="text-lg font-extrabold text-slate-800">{item.value}</p>
+                <p className="text-base sm:text-lg font-extrabold text-slate-800">{item.value}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* Parties */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 relative overflow-hidden">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 mb-6 sm:mb-8">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-full blur-3xl" />
             <div className="flex items-center gap-3 mb-4 relative z-10">
               <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 font-extrabold text-sm border border-green-200">S</div>
@@ -201,7 +204,7 @@ export default async function DealPage({ params }: PageProps) {
               {sellerWallet || seller?.wallet_address || 'Wallet not registered'}
             </p>
           </div>
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 relative overflow-hidden">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl" />
             <div className="flex items-center gap-3 mb-4 relative z-10">
               <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-extrabold text-sm border border-blue-200">B</div>
@@ -217,7 +220,7 @@ export default async function DealPage({ params }: PageProps) {
 
         {/* On-chain data */}
         {(deal.contract_app_id || deal.tracking_hash) && (
-          <div className="bg-white rounded-2xl p-6 mb-8 shadow-sm border border-slate-200 relative overflow-hidden">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 shadow-sm border border-slate-200 relative overflow-hidden">
             <div className="absolute left-0 top-0 w-1 h-full bg-[#189AB4]" />
             <h3 className="text-sm font-extrabold text-[#05445E] mb-5 flex items-center gap-2">
               <Shield className="w-4 h-4 text-[#189AB4]" />
@@ -231,7 +234,7 @@ export default async function DealPage({ params }: PageProps) {
                     <span className="text-xs font-bold text-slate-600 uppercase tracking-wide">Contract App ID</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-mono font-bold text-[#05445E]">{deal.contract_app_id}</span>
+                    <span className="text-xs sm:text-sm font-mono font-bold text-[#05445E] break-all">{deal.contract_app_id}</span>
                     <a href={`https://stellar.expert/explorer/testnet/contract/${deal.contract_app_id}`} target="_blank" rel="noopener noreferrer" className="text-[#189AB4] hover:bg-[#189AB4]/10 p-2 rounded-lg transition-colors bg-white border border-slate-200">
                       <ExternalLink className="w-3 h-3" />
                     </a>
@@ -244,7 +247,7 @@ export default async function DealPage({ params }: PageProps) {
                     <Hash className="w-4 h-4 text-green-500" />
                     <span className="text-xs font-bold text-slate-600 uppercase tracking-wide">Tracking Hash</span>
                   </div>
-                  <span className="text-xs font-mono font-bold text-[#05445E] bg-white px-3 py-1.5 rounded border border-slate-200 break-all max-w-[50%]">{deal.tracking_hash}</span>
+                  <span className="text-xs font-mono font-bold text-[#05445E] bg-white px-3 py-1.5 rounded border border-slate-200 break-all w-full sm:w-auto sm:max-w-[55%]">{deal.tracking_hash}</span>
                 </div>
               )}
             </div>
@@ -253,19 +256,19 @@ export default async function DealPage({ params }: PageProps) {
 
         {/* Arbitration result if resolved */}
         {arbitration && (
-          <div className="bg-gradient-to-br from-white to-blue-50/50 rounded-2xl p-6 mb-8 shadow-sm border border-blue-200 border-l-4 border-l-blue-500">
+          <div className="bg-gradient-to-br from-white to-blue-50/50 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 shadow-sm border border-blue-200 border-l-4 border-l-blue-500">
             <h3 className="text-sm font-extrabold text-blue-900 mb-4 flex items-center gap-2">
               <Scale className="w-4 h-4 text-blue-500" />
               Arbitration Verdict Executed
             </h3>
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <div className="p-4 bg-white/60 backdrop-blur-sm shadow-sm rounded-xl border border-green-200">
                 <p className="text-[10px] font-bold text-green-600 uppercase tracking-widest mb-1 items-center gap-1.5 flex"><div className="w-1.5 h-1.5 rounded-full bg-green-500"/> Seller Share</p>
-                <p className="text-3xl font-black text-green-700">{(arbitration as any).seller_pct}%</p>
+                <p className="text-2xl sm:text-3xl font-black text-green-700">{(arbitration as any).seller_pct}%</p>
               </div>
               <div className="p-4 bg-white/60 backdrop-blur-sm shadow-sm rounded-xl border border-blue-200">
                 <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1 items-center gap-1.5 flex"><div className="w-1.5 h-1.5 rounded-full bg-blue-500"/> Buyer Share</p>
-                <p className="text-3xl font-black text-blue-700">{(arbitration as any).buyer_pct}%</p>
+                <p className="text-2xl sm:text-3xl font-black text-blue-700">{(arbitration as any).buyer_pct}%</p>
               </div>
             </div>
             {(arbitration as any).notes && (
@@ -286,6 +289,7 @@ export default async function DealPage({ params }: PageProps) {
             buyer_email: deal.buyer_email,
             delivery_days: deal.delivery_days,
             dispute_window_days: deal.dispute_window_days,
+            on_chain_deal_id: deal.on_chain_deal_id,
             contract_app_id: deal.contract_app_id,
             contract_address: deal.contract_address,
             tracking_id: deal.tracking_id,

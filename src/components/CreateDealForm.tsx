@@ -122,22 +122,21 @@ export default function CreateDealForm() {
       console.log('✓ Contract deployed:', deployedContractId)
       setAppId(deployedContractId)
 
-      // 4. Get USDC contract ID
+      // 4. Resolve USDC token contract ID for this deal
       const _server = new Horizon.Server("https://horizon-testnet.stellar.org")
       const sorobanServer = new rpc.Server("https://soroban-testnet.stellar.org")
       const sellerAccount = await _server.loadAccount(sellerStellarAddress)
 
       const usdcBalance = sellerAccount.balances.find((b: any) => b.asset_type !== 'native' && b.asset_code === 'USDC') as any
-      const validMockIssuer = 'GBZUDOB2YZRVPQCBODPBXO2T3ASGWMH26BBYT34OWQJUC5LKXMBLZUYK'
-      const usdcIssuer = usdcBalance?.asset_issuer || validMockIssuer
-      let usdcContractId;
+      const configuredIssuer = (process.env.NEXT_PUBLIC_FIXED_USDC_ISSUER_PUBLIC || '').trim()
+      const usdcIssuer = configuredIssuer || usdcBalance?.asset_issuer
 
-      try {
-        const usdcAsset = new Asset('USDC', usdcIssuer)
-        usdcContractId = usdcAsset.contractId(Networks.TESTNET)
-      } catch (err) {
-        usdcContractId = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC' 
+      if (!usdcIssuer) {
+        throw new Error('USDC issuer could not be resolved. Set NEXT_PUBLIC_FIXED_USDC_ISSUER_PUBLIC or ensure seller wallet holds USDC from the intended issuer.')
       }
+
+      const usdcAsset = new Asset('USDC', usdcIssuer)
+      const usdcContractId = usdcAsset.contractId(Networks.TESTNET)
 
       // 5. Call create_deal on the NEWLY deployed contract
       console.log('Initializing deal on deployed contract...')
@@ -292,19 +291,19 @@ export default function CreateDealForm() {
   const isFormValid = form.itemName && form.amountUSDC && form.buyerWallet && form.arbitratorWallet && form.deliveryDays && form.disputeWindowDays;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
       
       {/* LEFT COLUMN: FORM */}
-      <div className="lg:col-span-2 space-y-6">
-        <form onSubmit={handleCreate} className="space-y-6" id="create-deal-form">
+      <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+        <form onSubmit={handleCreate} className="space-y-4 sm:space-y-6" id="create-deal-form">
           
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2 border-b border-gray-100 pb-3">
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
+            <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2 border-b border-gray-100 pb-3">
               <PackagePlus className="w-5 h-5 text-[#189AB4]" /> Item Details
             </h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Item Name *</label>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Item Name *</label>
                 <input
                   type="text"
                   maxLength={100}
@@ -316,7 +315,7 @@ export default function CreateDealForm() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Item Description <span className="text-gray-400 font-normal">(Optional)</span></label>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Item Description <span className="text-gray-400 font-normal">(Optional)</span></label>
                 <textarea
                   value={form.itemDescription}
                   onChange={e => updateForm('itemDescription', e.target.value)}
@@ -328,16 +327,16 @@ export default function CreateDealForm() {
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center justify-between border-b border-gray-100 pb-3">
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
+            <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center justify-between border-b border-gray-100 pb-3 gap-2">
               <span className="flex items-center gap-2"><Shield className="w-5 h-5 text-[#189AB4]" /> Trade Terms</span>
-              <span className="bg-[#e0f2fe] text-[#0369a1] text-xs px-2 py-0.5 rounded font-medium">Auto-executes on Stellar</span>
+              <span className="bg-[#e0f2fe] text-[#0369a1] text-[10px] sm:text-xs px-2 py-0.5 rounded font-medium">Auto-executes on Stellar</span>
             </h2>
             <div className="space-y-6">
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Escrow Amount (USDC) *</label>
-                <div className="relative max-w-sm">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Escrow Amount (USDC) *</label>
+                <div className="relative max-w-sm w-full">
                   <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
                     type="number"
@@ -355,7 +354,7 @@ export default function CreateDealForm() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Ship within (Days) *</label>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Ship within (Days) *</label>
                   <select
                     value={form.deliveryDays}
                     onChange={e => updateForm('deliveryDays', e.target.value)}
@@ -367,7 +366,7 @@ export default function CreateDealForm() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Dispute Window</label>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Dispute Window</label>
                   <div className="w-full px-3 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 flex items-center justify-between pointer-events-none">
                     <span>7 Days</span>
                     <span className="text-xs text-gray-400">Post-delivery policy</span>
@@ -379,13 +378,13 @@ export default function CreateDealForm() {
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2 border-b border-gray-100 pb-3">
+          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
+            <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-4 flex items-center gap-2 border-b border-gray-100 pb-3">
               <Mail className="w-5 h-5 text-[#189AB4]" /> Buyer Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Buyer Wallet Address *</label>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Buyer Wallet Address *</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -399,7 +398,7 @@ export default function CreateDealForm() {
                 <p className="text-xs text-gray-500 mt-1">Click "Auto-fill" to connect buyer's Freighter wallet</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Arbitrator Wallet Address *</label>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Arbitrator Wallet Address *</label>
                 <input
                   type="text"
                   value={form.arbitratorWallet}
@@ -411,7 +410,7 @@ export default function CreateDealForm() {
                 <p className="text-xs text-gray-500 mt-1">Must be a registered arbitrator wallet and different from seller wallet.</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Buyer Email *</label>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Buyer Email *</label>
                 <input
                   type="email"
                   value={form.buyerEmail}
@@ -428,9 +427,9 @@ export default function CreateDealForm() {
 
       {/* RIGHT COLUMN: PREVIEW STICKY CARD */}
       <div className="lg:col-span-1 relative">
-        <div className="sticky top-24 space-y-4">
+        <div className="space-y-4 lg:sticky lg:top-24">
           
-          <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-200 text-sm">
+          <div className="bg-white rounded-lg p-4 sm:p-5 shadow-sm border border-gray-200 text-sm">
             
             <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2 pb-2 border-b border-gray-100">
               <FileText className="w-4 h-4 text-[#189AB4]"/> Summary
@@ -461,7 +460,7 @@ export default function CreateDealForm() {
               </div>
             </div>
             
-            <div className="mt-6 p-3 bg-blue-50 border border-blue-100 rounded-md">
+            <div className="mt-5 sm:mt-6 p-3 bg-blue-50 border border-blue-100 rounded-md">
               <p className="text-xs text-blue-800 flex items-start gap-1.5 leading-relaxed">
                 <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 Review terms carefully. Once deployed, they are permanently locked on Stellar.

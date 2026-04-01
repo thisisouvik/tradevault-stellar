@@ -52,37 +52,37 @@ export default function WhyStellarPage() {
     <main className="flex min-h-screen flex-col bg-white">
       <HoverGradientNavBar />
 
-      <section className="bg-[#D6EFF9] pt-32 pb-24 relative overflow-hidden">
+      <section className="bg-[#D6EFF9] pt-24 sm:pt-28 lg:pt-32 pb-16 sm:pb-20 lg:pb-24 relative overflow-hidden">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-xs font-bold tracking-wide mb-6 bg-[#189AB4]/10 border border-[#189AB4]/20 text-[#05445E]">
             TECHNOLOGY DEEP-DIVE
           </div>
-          <h1 className="text-4xl md:text-6xl font-extrabold text-[#05445E] leading-tight mb-6 tracking-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#05445E] leading-tight mb-5 sm:mb-6 tracking-tight">
             Why we built TradeVault on <span className="text-[#189AB4]">Stellar.</span>
           </h1>
-          <p className="text-[#3a7fa0] text-lg font-medium max-w-2xl mx-auto leading-relaxed">
+          <p className="text-[#3a7fa0] text-base sm:text-lg font-medium max-w-2xl mx-auto leading-relaxed">
             We evaluated major blockchain options before committing. Stellar won on global payments focus, low fees, native USDC support, and reliable settlement.
           </p>
         </div>
       </section>
 
-      <section className="py-24 bg-[#EAF6FB]">
+      <section className="py-16 sm:py-20 lg:py-24 bg-[#EAF6FB]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-8 lg:gap-10">
             {reasons.map((reason, index) => {
               const Icon = reason.icon
               return (
                 <div
                   key={index}
-                  className="bg-white rounded-3xl p-10 border border-[#189AB4]/15 shadow-sm hover:shadow-[0_15px_40px_-10px_rgba(24,154,180,0.15)] transition-all"
+                  className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 lg:p-10 border border-[#189AB4]/15 shadow-sm hover:shadow-[0_15px_40px_-10px_rgba(24,154,180,0.15)] transition-all"
                 >
                   <div
-                    className="w-14 h-14 rounded-2xl flex items-center justify-center mb-8"
+                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center mb-5 sm:mb-8"
                     style={{ backgroundColor: `${reason.color}15` }}
                   >
                     <Icon className="w-7 h-7" style={{ color: reason.color }} strokeWidth={2} />
                   </div>
-                  <h3 className="text-2xl font-bold text-[#05445E] mb-4">{reason.title}</h3>
+                  <h3 className="text-xl sm:text-2xl font-bold text-[#05445E] mb-3 sm:mb-4">{reason.title}</h3>
                   <p className="text-[#3a7fa0] leading-relaxed text-[15px] font-medium">{reason.description}</p>
                 </div>
               )

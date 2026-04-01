@@ -58,18 +58,19 @@ export default function ArbitratorProfileClient({ profile, resolvedDisputes }: a
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800 pb-16">
       
       {/* Top Navbar */}
-      <header className="h-16 flex items-center px-8 border-b border-gray-200 bg-white sticky top-0 z-40 shadow-sm">
-        <Link href="/arbitrator" className="flex items-center gap-2 text-gray-500 hover:text-[#05445E] transition-colors text-sm font-bold bg-gray-50 px-4 py-2 rounded-xl border border-gray-200 hover:border-[#189AB4]/30">
+      <header className="h-16 flex items-center px-4 sm:px-8 border-b border-gray-200 bg-white sticky top-0 z-40 shadow-sm gap-2">
+        <Link href="/arbitrator" className="flex items-center gap-2 text-gray-500 hover:text-[#05445E] transition-colors text-xs sm:text-sm font-bold bg-gray-50 px-2.5 sm:px-4 py-2 rounded-xl border border-gray-200 hover:border-[#189AB4]/30">
           <ArrowLeft className="w-4 h-4" />
-          Dispute Queue
+          <span className="hidden sm:inline">Dispute Queue</span>
+          <span className="sm:hidden">Queue</span>
         </Link>
-        <div className="mx-auto flex items-center gap-2 relative z-10 transition-transform hover:scale-105 active:scale-95 pr-32">
+        <div className="mx-auto flex items-center gap-2 relative z-10 transition-transform hover:scale-105 active:scale-95 sm:pr-20 md:pr-32">
           <img src="/logo.png" alt="TradeVault" className="w-8 h-8 object-contain" />
           <span className="text-[#05445E] font-extrabold text-xl tracking-wide hidden sm:block">TradeVault</span>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-6 py-8 space-y-8">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
 
         {walletRequired && !profile?.wallet_address && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-amber-800 text-sm font-semibold">
@@ -78,12 +79,12 @@ export default function ArbitratorProfileClient({ profile, resolvedDisputes }: a
         )}
         
         <div>
-          <h1 className="text-2xl font-black text-slate-900 mb-2">Arbitrator Profile</h1>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">Arbitrator Profile</h1>
           <p className="text-sm font-medium text-slate-500">Manage your identity, metrics, and notifications.</p>
         </div>
 
         {/* SEC A - Account Details */}
-        <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+        <section className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-200">
            <h3 className="text-sm font-extrabold text-[#05445E] mb-5 flex items-center gap-2 border-b border-gray-100 pb-3">
              <User className="w-4 h-4 text-[#189AB4]" /> Account Details
            </h3>
@@ -102,7 +103,7 @@ export default function ArbitratorProfileClient({ profile, resolvedDisputes }: a
         </section>
 
         {/* SEC B - Wallet Address */}
-        <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 relative overflow-hidden">
+        <section className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-200 relative overflow-hidden">
            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-3xl pointer-events-none" />
            <h3 className="text-sm font-extrabold text-[#05445E] mb-5 flex items-center gap-2 border-b border-gray-100 pb-3 relative z-10">
              <Wallet className="w-4 h-4 text-[#189AB4]" /> Designated Arbitrator Wallet
@@ -122,11 +123,11 @@ export default function ArbitratorProfileClient({ profile, resolvedDisputes }: a
         </section>
 
         {/* SEC C - Performance Record */}
-        <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+        <section className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-200">
            <h3 className="text-sm font-extrabold text-[#05445E] mb-5 flex items-center gap-2 border-b border-gray-100 pb-3">
              <BarChart3 className="w-4 h-4 text-[#189AB4]" /> Independent Performance Record
            </h3>
-           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 sm:mb-8">
              <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
                <span className="text-xs font-bold text-gray-400 uppercase tracking-wide block mb-1">Total Resolved</span>
                <span className="text-2xl font-black text-[#05445E]">34</span>
@@ -181,7 +182,7 @@ export default function ArbitratorProfileClient({ profile, resolvedDisputes }: a
         </section>
 
         {/* SEC D - Notification Preferences */}
-        <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mb-8">
+        <section className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-200 mb-8">
            <h3 className="text-sm font-extrabold text-[#05445E] mb-5 flex items-center gap-2 border-b border-gray-100 pb-3">
              <Bell className="w-4 h-4 text-[#189AB4]" /> Notification Preferences
            </h3>
