@@ -195,6 +195,10 @@ graph LR
 
 The TradeVault escrow system has been fully migrated to Stellar's Soroban architecture and is currently live on the **Stellar Testnet**.
 
+### Soroban Integration Standard
+
+The dApp now uses standard Soroban `Contract` call operations (SDK `Contract.call(...)`) instead of low-level host function construction. This keeps frontend and backend integration aligned with common Soroban patterns and easier to maintain.
+
 ### Deployed Contract
 
 | Field       | Value                                                                                                                                  |
@@ -511,6 +515,39 @@ Capture notes:
 
 6. **Open the App:**
    Navigate to [http://localhost:3000](http://localhost:3000) in your browser.
+
+## ▲ Deploy On Vercel
+
+This project is Vercel-ready (`vercel.json` includes the timeout-check cron route).
+
+1. Install Vercel CLI and authenticate:
+   ```bash
+   npm i -g vercel
+   vercel login
+   ```
+2. Link the project and configure environment variables in Vercel Project Settings:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL
+   NEXT_PUBLIC_SUPABASE_ANON_KEY
+   SUPABASE_SERVICE_ROLE_KEY
+   STELLAR_PLATFORM_SECRET
+   STELLAR_CONTRACT_ID
+   NEXT_PUBLIC_STELLAR_CONTRACT_ID
+   STELLAR_RPC_URL
+   STELLAR_HORIZON_URL
+   NEXT_PUBLIC_STELLAR_RPC_URL
+   NEXT_PUBLIC_STELLAR_HORIZON_URL
+   CRON_SECRET
+   NEXT_PUBLIC_APP_URL
+   ```
+3. Deploy to production:
+   ```bash
+   vercel --prod
+   ```
+4. Add a header to your Vercel cron call for `/api/cron/check-timeouts`:
+   `Authorization: Bearer <CRON_SECRET>`
+
+If your CLI is not installed locally, you can also use `npx vercel --prod`.
 
 ---
 

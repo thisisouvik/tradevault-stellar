@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Wallet, Zap, AlertCircle, CheckCircle2, ExternalLink } from 'lucide-react'
 
 import { isAllowed, setAllowed, getAddress, signTransaction } from '@stellar/freighter-api'
-import { Horizon, rpc, Address, xdr, nativeToScVal, TransactionBuilder, Operation, Networks, Asset } from '@stellar/stellar-sdk'
+import { Horizon, rpc, xdr, nativeToScVal, TransactionBuilder, Operation, Networks, Asset, Contract } from '@stellar/stellar-sdk'
 
 interface FundEscrowProps {
   dealId: string
@@ -230,28 +230,11 @@ export function FundEscrow({ dealId, amountUSDC, sellerWallet, buyerWallet, cont
         }
       }
 
-      const acceptOp = Operation.invokeHostFunction({
-        func: xdr.HostFunction.hostFunctionTypeInvokeContract(
-          new xdr.InvokeContractArgs({
-            contractAddress: new Address(resolvedContractId).toScAddress(),
-            functionName: 'accept_deal',
-            args: [nativeToScVal(normalizedOnChainDealId, { type: 'u32' })]
-          })
-        ),
-        auth: []
-      })
+      const contract = new Contract(resolvedContractId)
+      const acceptOp = contract.call('accept_deal', nativeToScVal(normalizedOnChainDealId, { type: 'u32' }))
 
       // Buyer calls fund_deal() to lock USDC into the smart contract
-      const fundOp = Operation.invokeHostFunction({
-        func: xdr.HostFunction.hostFunctionTypeInvokeContract(
-          new xdr.InvokeContractArgs({
-            contractAddress: new Address(resolvedContractId).toScAddress(),
-            functionName: 'fund_deal',
-            args: [nativeToScVal(normalizedOnChainDealId, { type: 'u32' })]
-          })
-        ),
-        auth: []
-      })
+      const fundOp = contract.call('fund_deal', nativeToScVal(normalizedOnChainDealId, { type: 'u32' }))
 
       let realTxHash = ''
       try {

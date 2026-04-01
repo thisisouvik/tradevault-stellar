@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react'
 import { isAllowed, setAllowed, getAddress, signTransaction } from '@stellar/freighter-api'
-import { Horizon, rpc, Address, xdr, nativeToScVal, TransactionBuilder, Operation, Networks } from '@stellar/stellar-sdk'
+import { Horizon, rpc, nativeToScVal, TransactionBuilder, Networks, Contract } from '@stellar/stellar-sdk'
 
 interface ConfirmReceiptProps {
   dealId: string
@@ -53,16 +53,8 @@ export function ConfirmReceipt({ dealId, amountUSDC, sellerWallet, contractId, o
       }
 
       // Buyer calls confirm_package() to approve and release USDC to the seller
-      const confirmPackageOp = Operation.invokeHostFunction({
-        func: xdr.HostFunction.hostFunctionTypeInvokeContract(
-          new xdr.InvokeContractArgs({
-            contractAddress: new Address(resolvedContractId).toScAddress(),
-            functionName: 'confirm_package',
-            args: [nativeToScVal(normalizedOnChainDealId, { type: 'u32' })]
-          })
-        ),
-        auth: []
-      })
+      const contract = new Contract(resolvedContractId)
+      const confirmPackageOp = contract.call('confirm_package', nativeToScVal(normalizedOnChainDealId, { type: 'u32' }))
 
       let txPayment = new TransactionBuilder(userAccount, {
         fee: "100000",

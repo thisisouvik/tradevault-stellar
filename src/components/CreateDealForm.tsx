@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { PackagePlus, DollarSign, Mail, FileText, AlertCircle, CheckCircle2, Shield, ExternalLink,} from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { isAllowed, setAllowed, getAddress, signTransaction } from '@stellar/freighter-api'
-import { Horizon, rpc, Address, nativeToScVal, xdr, TransactionBuilder, Operation, Networks, Asset } from '@stellar/stellar-sdk'
+import { Horizon, rpc, nativeToScVal, TransactionBuilder, Networks, Asset, Contract } from '@stellar/stellar-sdk'
 
 export default function CreateDealForm() {
   const router = useRouter()
@@ -142,25 +142,18 @@ export default function CreateDealForm() {
       console.log('Initializing deal on deployed contract...')
       const generatedDealId = Date.now() >>> 0
 
-      const createOp = Operation.invokeHostFunction({
-        func: xdr.HostFunction.hostFunctionTypeInvokeContract(
-          new xdr.InvokeContractArgs({
-            contractAddress: new Address(deployedContractId).toScAddress(),
-            functionName: 'create_deal',
-            args: [
-              nativeToScVal(generatedDealId, { type: 'u32' }),
-              nativeToScVal(sellerStellarAddress, { type: 'address' }),
-              nativeToScVal(form.buyerWallet.trim(), { type: 'address' }),
-              nativeToScVal(form.arbitratorWallet.trim(), { type: 'address' }),
-              nativeToScVal(usdcContractId, { type: 'address' }),
-              nativeToScVal(BigInt(amount) * BigInt(10_000_000), { type: 'i128' }),
-              nativeToScVal(Number(form.deliveryDays), { type: 'u32' }),
-              nativeToScVal(7, { type: 'u32' })
-            ]
-          })
-        ),
-        auth: []
-      })
+      const contract = new Contract(deployedContractId)
+      const createOp = contract.call(
+        'create_deal',
+        nativeToScVal(generatedDealId, { type: 'u32' }),
+        nativeToScVal(sellerStellarAddress, { type: 'address' }),
+        nativeToScVal(form.buyerWallet.trim(), { type: 'address' }),
+        nativeToScVal(form.arbitratorWallet.trim(), { type: 'address' }),
+        nativeToScVal(usdcContractId, { type: 'address' }),
+        nativeToScVal(BigInt(amount) * BigInt(10_000_000), { type: 'i128' }),
+        nativeToScVal(Number(form.deliveryDays), { type: 'u32' }),
+        nativeToScVal(7, { type: 'u32' })
+      )
 
       let txPayment = new TransactionBuilder(sellerAccount, { fee: "100000", networkPassphrase: Networks.TESTNET })
         .addOperation(createOp).setTimeout(30).build()

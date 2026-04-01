@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { AlertTriangle, AlertCircle } from 'lucide-react'
 import { isAllowed, setAllowed, getAddress, signTransaction } from '@stellar/freighter-api'
-import { Horizon, rpc, Address, nativeToScVal, xdr, TransactionBuilder, Operation, Networks } from '@stellar/stellar-sdk'
+import { Horizon, rpc, nativeToScVal, TransactionBuilder, Networks, Contract } from '@stellar/stellar-sdk'
 
 interface RaiseDisputeProps {
   dealId: string
@@ -47,16 +47,12 @@ export function RaiseDispute({ dealId, contractId, onChainDealId, onSuccess }: R
       const reasonDigest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(reasonSeed))
       const reasonHashBytes = new Uint8Array(reasonDigest)
 
-      const disputeOp = Operation.invokeHostFunction({
-        func: xdr.HostFunction.hostFunctionTypeInvokeContract(
-          new xdr.InvokeContractArgs({
-            contractAddress: new Address(resolvedContractId).toScAddress(),
-            functionName: 'raise_dispute',
-            args: [nativeToScVal(normalizedOnChainDealId, { type: 'u32' }), nativeToScVal(reasonHashBytes, { type: 'bytes' })]
-          })
-        ),
-        auth: []
-      })
+      const contract = new Contract(resolvedContractId)
+      const disputeOp = contract.call(
+        'raise_dispute',
+        nativeToScVal(normalizedOnChainDealId, { type: 'u32' }),
+        nativeToScVal(reasonHashBytes, { type: 'bytes' })
+      )
 
       let txPayment = new TransactionBuilder(userAccount, {
         fee: "100000",
