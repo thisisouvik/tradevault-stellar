@@ -13,10 +13,13 @@
     <img src="https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white" alt="Rust" />
     <img src="https://img.shields.io/badge/Stellar-14161A?style=for-the-badge&logo=stellar&logoColor=white" alt="Stellar" />
   </p>
+
 </div>
 
 <br/>
 
+  <p><strong style="font-size: 1.2em;">🚀 <a href="https://tradevault-stellar.vercel.app/">Live Demo</a></strong></p>
+<br>
 ## 📖 What is TradeVault?
 TradeVault is a secure, trustless, decentralized escrow marketplace built on the Stellar network. It eliminates the risk of fraud in peer-to-peer online transactions by locking funds (USDC) securely inside a Soroban smart contract. Funds are only released when both parties are satisfied, or after a fair resolution by an independent platform Arbitrator.
 
@@ -57,11 +60,11 @@ The following screenshots are sourced directly from your `public` folder and map
 ### Authentication
 
 <p align="center">
-   <img src="public/signin-illustration.png" alt="Sign in page illustration layout" width="900" />
+   <img src="public/sign-up.png" alt="Sign up page illustration layout" width="900" />
 </p>
 
 <p align="center">
-   <img src="public/signin.svg" alt="Sign in visual asset" width="700" />
+   <img src="public/sign-in.png" alt="Sign in page illustration layout" width="700" />
 </p>
 
 ### Seller Flow
