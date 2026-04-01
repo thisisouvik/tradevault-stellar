@@ -1,5 +1,5 @@
 import { createHash } from 'crypto'
-import { Horizon, rpc, Address, nativeToScVal, xdr, TransactionBuilder, Operation, Networks, Keypair } from '@stellar/stellar-sdk'
+import { Horizon, rpc, nativeToScVal, xdr, TransactionBuilder, Networks, Keypair, Contract } from '@stellar/stellar-sdk'
 import { validateEnv, SERVER_ENV } from '@/lib/env'
 import { withRetry, fetchWithRetry } from '@/lib/retry'
 import { logServerError } from '@/lib/telemetry'
@@ -74,16 +74,8 @@ export async function callContractMethod(
     xdrArgs = [nativeToScVal(Number(dealId), { type: 'u32' }), xdr.ScVal.scvBytes(hashBytes)]
   }
 
-  const op = Operation.invokeHostFunction({
-    func: xdr.HostFunction.hostFunctionTypeInvokeContract(
-      new xdr.InvokeContractArgs({
-        contractAddress: new Address(resolvedContractId).toScAddress(),
-        functionName: method,
-        args: xdrArgs
-      })
-    ),
-    auth: []
-  })
+  const contract = new Contract(resolvedContractId)
+  const op = contract.call(method, ...xdrArgs)
 
   let tx = new TransactionBuilder(account, {
     fee: "100000",
